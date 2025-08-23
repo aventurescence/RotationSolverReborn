@@ -101,8 +101,7 @@ public sealed class DNC_Reborn : DancerRotation
             return base.EmergencyAbility(nextGCD, out act); // Fallback to base class method if none of the above conditions are met
         }
 
-        act = null;
-        return false;
+        return base.EmergencyAbility(nextGCD, out act);
     }
 
     [RotationDesc(ActionID.CuringWaltzPvE, ActionID.ImprovisationPvE)]
@@ -146,18 +145,16 @@ public sealed class DNC_Reborn : DancerRotation
     // Override the method for handling attack abilities
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
-
         //If dancing or about to dance avoid using abilities to avoid animation lock delaying the dance
         if (IsDancing || StandardStepPvE.Cooldown.ElapsedAfter(28) || TechnicalStepPvE.Cooldown.ElapsedAfter(118))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         // Prevent triple weaving by checking if an action was just used
         if (AnimationLock > 0.75f)
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         if (IsBurst)

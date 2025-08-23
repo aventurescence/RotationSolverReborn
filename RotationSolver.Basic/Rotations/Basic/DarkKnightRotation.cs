@@ -121,6 +121,11 @@ public partial class DarkKnightRotation
             return stacks == byte.MaxValue ? (byte)3 : stacks;
         }
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected static bool HasDarkArtsPvP => Player.HasStatus(true, StatusID.DarkArts_3034);
     #endregion
 
     #region PvE Actions Unassignable
@@ -470,6 +475,7 @@ public partial class DarkKnightRotation
     static partial void ModifyShadowbringerPvP(ref ActionSetting setting)
     {
         setting.ActionCheck = () => Player.CurrentHp > 12000 || Player.HasStatus(true, StatusID.DarkArts_3034);
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -483,21 +489,25 @@ public partial class DarkKnightRotation
     static partial void ModifyScarletDeliriumPvP(ref ActionSetting setting)
     {
         setting.ActionCheck = () => ScarletDeliriumPvPReady;
+        setting.MPOverride = () => 0;
     }
 
     static partial void ModifyComeuppancePvP(ref ActionSetting setting)
     {
         setting.ActionCheck = () => ComeuppancePvPReady;
+        setting.MPOverride = () => 0;
     }
 
     static partial void ModifyTorcleaverPvP(ref ActionSetting setting)
     {
         setting.ActionCheck = () => TorcleaverPvPReady;
+        setting.MPOverride = () => 0;
     }
 
     static partial void ModifyDisesteemPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.Scorn_4290];
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,

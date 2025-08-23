@@ -26,8 +26,18 @@ public static class TargetFilter
                 continue;
             if (item.CurrentHp != 0 || !item.IsTargetable || item.IsTargetMoving() || item.IsEnemy())
                 continue;
-            if (!item.IsParty() && !item.IsAllianceMember())
-                continue;
+            RaiseType raisetype = Service.Config.RaiseType;
+
+            if (raisetype == RaiseType.AllOutOfDuty)
+            {
+                if (!item.IsParty() && !item.IsOtherPlayerOutOfDuty())
+                    continue;
+            }
+            if (raisetype != RaiseType.AllOutOfDuty)
+            {
+                if (!item.IsParty() && !item.IsAllianceMember())
+                    continue;
+            }
             if (item.DistanceToPlayer() > 30)
                 continue;
             if (!item.CanSee())

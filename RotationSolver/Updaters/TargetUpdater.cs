@@ -58,14 +58,21 @@ internal static partial class TargetUpdater
     private static unsafe List<IBattleChara> GetAllianceMembers()
     {
         RaiseType raisetype = Service.Config.RaiseType;
+
         if (raisetype == RaiseType.PartyOnly)
         {
             return [];
         }
-        return GetMembers(DataCenter.AllTargets, isParty: false, isAlliance: true);
+
+        if (raisetype == RaiseType.AllOutOfDuty)
+        {
+            return GetMembers(DataCenter.AllTargets, isParty: false, isAlliance: false, IsOutDuty: true);
+        }
+
+        return GetMembers(DataCenter.AllTargets, isParty: false, isAlliance: true, IsOutDuty: false);
     }
 
-    private static unsafe List<IBattleChara> GetMembers(List<IBattleChara> source, bool isParty, bool isAlliance = false)
+    private static unsafe List<IBattleChara> GetMembers(List<IBattleChara> source, bool isParty, bool isAlliance = false, bool IsOutDuty = false)
     {
         List<IBattleChara> members = [];
         if (source == null) return members;
@@ -77,6 +84,7 @@ internal static partial class TargetUpdater
                 if (member.IsPet()) continue;
                 if (isParty && !member.IsParty()) continue;
                 if (isAlliance && (!ObjectHelper.IsAllianceMember(member) || member.IsParty())) continue;
+                if (IsOutDuty && (!ObjectHelper.IsOtherPlayerOutOfDuty(member) || member.IsParty())) continue;
 
                 FFXIVClientStructs.FFXIV.Client.Game.Character.Character* character = member.Character();
                 if (character == null) continue;
@@ -191,13 +199,16 @@ internal static partial class TargetUpdater
                         }
                     }
                 }
-                else if (raisetype == RaiseType.All && DataCenter.AllTargets != null)
+                else if(raisetype == RaiseType.All || raisetype == RaiseType.AllOutOfDuty)
                 {
-                    foreach (var target in DataCenter.AllTargets.GetDeath())
+                    if (DataCenter.AllianceMembers != null)
                     {
-                        if (!deathParty.Contains(target))
+                        foreach (var target in DataCenter.AllianceMembers.GetDeath())
                         {
-                            validRaiseTargets.Add(target);
+                            if (!deathParty.Contains(target))
+                            {
+                                validRaiseTargets.Add(target);
+                            }
                         }
                     }
                 }

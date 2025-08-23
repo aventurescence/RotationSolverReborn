@@ -514,10 +514,9 @@ public sealed class SCH_Reborn : ScholarRotation
     [RotationDesc(ActionID.SuccorPvE, ActionID.ConcitationPvE, ActionID.AccessionPvE)]
     protected override bool HealAreaGCD(out IAction? act)
     {
-        act = null;
         if (HasSwift && SwiftLogic && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return false;
+            return base.HealAreaGCD(out act);
         }
 
         // If emergency tactics is up we are using succor for raidwide recovery not shields
@@ -548,10 +547,9 @@ public sealed class SCH_Reborn : ScholarRotation
     [RotationDesc(ActionID.AdloquiumPvE, ActionID.ManifestationPvE, ActionID.PhysickPvE)]
     protected override bool HealSingleGCD(out IAction? act)
     {
-        act = null;
         if (HasSwift && SwiftLogic && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return false;
+            return base.HealSingleGCD(out act);
         }
 
         if (ManifestationPvE.CanUse(out act, skipCastingCheck: true))
@@ -575,10 +573,9 @@ public sealed class SCH_Reborn : ScholarRotation
     [RotationDesc(ActionID.SuccorPvE, ActionID.ConcitationPvE, ActionID.AccessionPvE)]
     protected override bool DefenseAreaGCD(out IAction? act)
     {
-        act = null;
         if (HasSwift && SwiftLogic && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return false;
+            return base.DefenseAreaGCD(out act);
         }
 
         // Only have all 3 checks in case players have added their own custom configurations.
@@ -602,10 +599,9 @@ public sealed class SCH_Reborn : ScholarRotation
 
     protected override bool GeneralGCD(out IAction? act)
     {
-        act = null;
         if (HasSwift && SwiftLogic && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
 
         // Summon Eos
@@ -617,7 +613,7 @@ public sealed class SCH_Reborn : ScholarRotation
         // Don't use attacks if we're in a wipe scenario spamming rezzes and heals
         if (CurrentMp < EmergencyHealingMPThreshold)
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
 
         int nearbyHostiles = NumberOfHostilesInRangeOf(5);

@@ -142,12 +142,10 @@ public sealed class WHM_Reborn : WhiteMageRotation
     [RotationDesc(ActionID.TemperancePvE, ActionID.LiturgyOfTheBellPvE)]
     protected override bool DefenseAreaAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
-
         if ((TemperancePvE.Cooldown.IsCoolingDown && !TemperancePvE.Cooldown.WillHaveOneCharge(100))
             || (LiturgyOfTheBellPvE.Cooldown.IsCoolingDown && !LiturgyOfTheBellPvE.Cooldown.WillHaveOneCharge(160)))
         {
-            return false;
+            return base.DefenseAreaAbility(nextGCD, out act);
         }
 
         if (TemperancePvE.CanUse(out act))
@@ -171,11 +169,10 @@ public sealed class WHM_Reborn : WhiteMageRotation
     [RotationDesc(ActionID.DivineBenisonPvE, ActionID.AquaveilPvE)]
     protected override bool DefenseSingleAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if ((DivineBenisonPvE.Cooldown.IsCoolingDown && !DivineBenisonPvE.Cooldown.WillHaveOneCharge(15))
             || (AquaveilPvE.Cooldown.IsCoolingDown && !AquaveilPvE.Cooldown.WillHaveOneCharge(52)))
         {
-            return false;
+            return base.DefenseSingleAbility(nextGCD, out act);
         }
 
         if (DivineBenisonPvE.CanUse(out act))
@@ -212,7 +209,7 @@ public sealed class WHM_Reborn : WhiteMageRotation
 
         if (IsLastAction(ActionID.BenedictionPvE))
         {
-            return false;
+            return base.HealSingleAbility(nextGCD, out act);
         }
 
         if (AsylumSingle && !IsMoving && AsylumPvE.CanUse(out act))
@@ -256,10 +253,9 @@ public sealed class WHM_Reborn : WhiteMageRotation
     [RotationDesc(ActionID.AfflatusRapturePvE, ActionID.MedicaIiPvE, ActionID.CureIiiPvE, ActionID.MedicaPvE)]
     protected override bool HealAreaGCD(out IAction? act)
     {
-        act = null;
         if ((HasSwift || IsLastAction(ActionID.SwiftcastPvE)) && SwiftLogic && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return false;
+            return base.HealAreaGCD(out act);
         }
 
         if (AfflatusRapturePvE.CanUse(out act))
@@ -303,10 +299,9 @@ public sealed class WHM_Reborn : WhiteMageRotation
     [RotationDesc(ActionID.AfflatusSolacePvE, ActionID.RegenPvE, ActionID.CureIiPvE, ActionID.CurePvE)]
     protected override bool HealSingleGCD(out IAction? act)
     {
-        act = null;
         if ((HasSwift || IsLastAction(ActionID.SwiftcastPvE)) && SwiftLogic && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return false;
+            return base.HealSingleGCD(out act);
         }
 
         if (AfflatusSolacePvE.CanUse(out act))
@@ -334,16 +329,14 @@ public sealed class WHM_Reborn : WhiteMageRotation
 
     protected override bool GeneralGCD(out IAction? act)
     {
-        act = null;
-
         if (HasThinAir && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return base.RaiseGCD(out act);
+            return RaiseGCD(out act);
         }
 
         if ((HasSwift || IsLastAction(ActionID.SwiftcastPvE)) && SwiftLogic && MergedStatus.HasFlag(AutoStatus.Raise))
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
 
         //if (NotInCombatDelay && RegenDefense.CanUse(out act)) return true;

@@ -26,10 +26,9 @@ public sealed class DRG_Reborn : DragoonRotation
     [RotationDesc(ActionID.WingedGlidePvE)]
     protected override bool MoveForwardAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (IsLastAction(false, StardiverPvE))
         {
-            return false;
+            return base.MoveForwardAbility(nextGCD, out act);
         }
 
         if (WingedGlidePvE.CanUse(out act, skipComboCheck: true))
@@ -42,10 +41,9 @@ public sealed class DRG_Reborn : DragoonRotation
     [RotationDesc(ActionID.ElusiveJumpPvE)]
     protected override bool MoveBackAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (IsLastAction(false, StardiverPvE))
         {
-            return false;
+            return base.MoveBackAbility(nextGCD, out act);
         }
 
         if (ElusiveJumpPvE.CanUse(out act, skipComboCheck: true))
@@ -58,10 +56,9 @@ public sealed class DRG_Reborn : DragoonRotation
     [RotationDesc(ActionID.FeintPvE)]
     protected sealed override bool DefenseAreaAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (IsLastAction(false, StardiverPvE))
         {
-            return false;
+            return base.DefenseAreaAbility(nextGCD, out act);
         }
 
         if (FeintPvE.CanUse(out act, skipComboCheck: true))
@@ -91,17 +88,16 @@ public sealed class DRG_Reborn : DragoonRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (IsLastAction(false, StardiverPvE))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         if (DisembowelPvE.EnoughLevel)
         {
             if (!HasPowerSurge)
             {
-                return false;
+                return base.AttackAbility(nextGCD, out act);
             }
         }
 

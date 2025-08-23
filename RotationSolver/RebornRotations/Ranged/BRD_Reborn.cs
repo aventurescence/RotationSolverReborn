@@ -215,8 +215,6 @@ public sealed class BRD_Reborn : BardRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
-
         if (IsBurst && Song != Song.None && MagesBalladPvE.EnoughLevel)
         {
             if (((!RadiantFinalePvE.EnoughLevel && !RagingStrikesPvE.Cooldown.IsCoolingDown)
@@ -254,7 +252,7 @@ public sealed class BRD_Reborn : BardRotation
 
         if (RadiantFinalePvE.EnoughLevel && RadiantFinalePvE.Cooldown.IsCoolingDown && BattleVoicePvE.EnoughLevel && !BattleVoicePvE.Cooldown.IsCoolingDown)
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         if ((RagingStrikesPvE.Cooldown.IsCoolingDown || !RagingStrikesPvE.Cooldown.WillHaveOneCharge(15)) && Song != Song.None && EmpyrealArrowPvE.CanUse(out act))

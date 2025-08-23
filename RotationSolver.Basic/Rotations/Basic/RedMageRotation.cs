@@ -497,6 +497,7 @@ public partial class RedMageRotation
     static partial void ModifyGrandImpactPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.Dualcast_1393];
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -505,24 +506,25 @@ public partial class RedMageRotation
 
     static partial void ModifyEnchantedRipostePvP(ref ActionSetting setting)
     {
+        setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.EnchantedRipostePvP) == ActionID.EnchantedRipostePvP;
         setting.StatusProvide = [StatusID.EnchantedRiposte];
     }
 
     static partial void ModifyEnchantedZwerchhauPvP(ref ActionSetting setting)
     {
-        setting.ComboIds = [ActionID.EnchantedRipostePvP];
+        setting.ActionCheck = () => IsLastComboAction(ActionID.EnchantedRipostePvP);
         setting.StatusProvide = [StatusID.EnchantedZwerchhau_3238];
     }
 
     static partial void ModifyEnchantedRedoublementPvP(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.EnchantedRipostePvP) == ActionID.EnchantedRedoublementPvP;
+        setting.ActionCheck = () => IsLastComboAction(ActionID.EnchantedZwerchhauPvP);
         setting.StatusProvide = [StatusID.EnchantedRedoublement_3239];
     }
 
     static partial void ModifyScorchPvP(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.EnchantedRipostePvP) == ActionID.ScorchPvP;
+        setting.ActionCheck = () => IsLastComboAction(ActionID.EnchantedRedoublementPvP);
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -541,6 +543,10 @@ public partial class RedMageRotation
     static partial void ModifyEmboldenPvP(ref ActionSetting setting)
     {
         setting.StatusProvide = [StatusID.Embolden_2282, StatusID.PrefulgenceReady_4322];
+        setting.CreateConfig = () => new ActionConfig()
+        {
+            AoeCount = 1,
+        };
     }
 
     static partial void ModifyCorpsacorpsPvP(ref ActionSetting setting)
@@ -560,7 +566,8 @@ public partial class RedMageRotation
 
     static partial void ModifyPrefulgencePvP(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.EmboldenPvP) == ActionID.PrefulgencePvP;
+        setting.StatusNeed = [StatusID.PrefulgenceReady_4322];
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -569,7 +576,8 @@ public partial class RedMageRotation
 
     static partial void ModifyViceOfThornsPvP(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.FortePvP) == ActionID.ViceOfThornsPvP;
+        setting.StatusNeed = [StatusID.ThornedFlourish_4321];
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,

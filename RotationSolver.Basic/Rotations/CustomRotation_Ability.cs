@@ -605,7 +605,7 @@ public partial class CustomRotation
     [RotationDesc(DescType.HealSingleAbility)]
     protected virtual bool HealSingleAbility(IAction nextGCD, out IAction? act)
     {
-        if (RecuperatePvP.CanUse(out act))
+        if (RecuperatePvP.CanUse(out act) && !Player.HasStatus(true, StatusID.Guard))
         {
             return true;
         }

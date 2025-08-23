@@ -24,8 +24,14 @@ public enum RaiseType : byte
     PartyAndAllianceHealers,
 
     /// <summary>
+    /// Raise All In Duty.
+    /// </summary>
+    [Description("Raise All In Duty.")]
+    All,
+
+    /// <summary>
     /// Raise all.
     /// </summary>
     [Description("Raise All.")]
-    All,
+    AllOutOfDuty,
 }

@@ -359,6 +359,7 @@ public partial class WarriorRotation
     static partial void ModifyInnerChaosPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.InnerChaosReady];
+        setting.MPOverride = () => 0;
     }
 
     static partial void ModifyPrimalRendPvP(ref ActionSetting setting)
@@ -373,6 +374,7 @@ public partial class WarriorRotation
     static partial void ModifyPrimalRuinationPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.PrimalRuinationReady_4285];
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -397,6 +399,7 @@ public partial class WarriorRotation
     static partial void ModifyPrimalWrathPvP(ref ActionSetting setting)
     {
         setting.IsFriendly = false;
+        setting.MPOverride = () => 0;
         setting.StatusNeed = [StatusID.Wrathful_4286];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -420,6 +423,7 @@ public partial class WarriorRotation
     static partial void ModifyChaoticCyclonePvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.ChaoticCycloneReady];
+        setting.MPOverride = () => 0;
         setting.IsFriendly = false;
         setting.CreateConfig = () => new ActionConfig()
         {

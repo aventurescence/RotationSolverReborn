@@ -132,10 +132,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool InterruptAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.InterruptAbility(nextGCD, out act);
         }
 
         if (OccultFalconPvE.CanUse(out act))
@@ -158,10 +157,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool DispelAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.DispelAbility(nextGCD, out act);
         }
 
         if (RecuperationPvE.CanUse(out act))
@@ -174,10 +172,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool GeneralAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.GeneralAbility(nextGCD, out act);
         }
 
         if (BattleBellPvE.CanUse(out act))
@@ -247,10 +244,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
         #region Utility/Non-scaling abilities that don't care about burst
         if (PhantomDoomPvE.CanUse(out act))
@@ -267,7 +263,7 @@ public sealed class PhantomDefault : PhantomRotation
         #region Burst abilities
         if (ShouldHoldBurst())
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         if (PhantomKickPvE.CanUse(out act))
@@ -294,10 +290,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool DefenseSingleAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.DefenseSingleAbility(nextGCD, out act);
         }
 
         if (PhantomGuardPvE.CanUse(out act))
@@ -320,10 +315,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool DefenseAreaAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.DefenseAreaAbility(nextGCD, out act);
         }
 
         if (MightyMarchPvE.CanUse(out act))
@@ -361,10 +355,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool HealSingleAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.HealSingleAbility(nextGCD, out act);
         }
 
         if (OccultHealPvE.CanUse(out act))
@@ -412,10 +405,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool HealAreaAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.HealAreaAbility(nextGCD, out act);
         }
 
         if (BlessingUseage && BlessingPvE.CanUse(out act) && (PartyMembersAverHP < PredictBlessingThreshold || Player.GetHealthRatio() < PredictBlessingThreshold)) // Phantom heal gets a larger threshold than normal healing
@@ -441,10 +433,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool MoveForwardAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.MoveForwardAbility(nextGCD, out act);
         }
 
         if (OccultFeatherfootPvE.CanUse(out act))
@@ -457,10 +448,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool MyInterruptGCD(out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.MyInterruptGCD(out act);
         }
 
         if (MineuchiPvE.CanUse(out act))
@@ -473,10 +463,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool RaiseGCD(out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.RaiseGCD(out act);
         }
 
         if (RevivePvE.CanUse(out act))
@@ -489,10 +478,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool HealSingleGCD(out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.HealSingleGCD(out act);
         }
 
         if (OccultResuscitationPvE.CanUse(out act))
@@ -513,10 +501,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool HealAreaGCD(out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.HealAreaGCD(out act);
         }
 
         if (SunbathPvE.CanUse(out act))
@@ -534,10 +521,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool DefenseSingleGCD(out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.DefenseSingleGCD(out act);
         }
 
         if (PrayPvE.CanUse(out act))
@@ -550,10 +536,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool DefenseAreaGCD(out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus)
         {
-            return false;
+            return base.DefenseAreaGCD(out act);
         }
 
         if (CloudyCaressPvE.CanUse(out act))
@@ -571,10 +556,9 @@ public sealed class PhantomDefault : PhantomRotation
 
     public override bool GeneralGCD(out IAction? act)
     {
-        act = null;
         if (HasLockoutStatus || Player.HasStatus(true, StatusID.Reassembled))
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
 
         if (InCombat && AetherialGainPvE.CanUse(out act))
@@ -611,7 +595,7 @@ public sealed class PhantomDefault : PhantomRotation
 
         if (ShouldHoldBurst())
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
 
         if (ZeninagePvE.CanUse(out act, skipComboCheck: true))

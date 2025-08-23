@@ -393,7 +393,7 @@ public sealed class RDM_Reborn : RedMageRotation
 
         if (ManaStacks == 3)
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
 
         //Reprise logic

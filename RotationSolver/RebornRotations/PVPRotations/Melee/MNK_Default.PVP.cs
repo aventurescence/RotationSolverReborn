@@ -7,9 +7,6 @@ public sealed class MNK_DefaultPvP : MonkRotation
 {
     #region Configurations
 
-    [RotationConfig(CombatType.PvP, Name = "Use Purify")]
-    public bool UsePurifyPvP { get; set; } = true;
-
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool RespectGuard { get; set; } = true;
 
@@ -22,35 +19,15 @@ public sealed class MNK_DefaultPvP : MonkRotation
     public float SmitePvPPercent { get; set; } = 0.25f;
     #endregion
 
-    #region Standard PVP Utilities
-    private bool DoPurify(out IAction? action)
-    {
-        action = null;
-        if (!UsePurifyPvP)
-        {
-            return false;
-        }
-
-        List<int> purifiableStatusesIDs = new()
-        {
-            // Stun, DeepFreeze, HalfAsleep, Sleep, Bind, Heavy, Silence
-            1343, 3219, 3022, 1348, 1345, 1344, 1347
-        };
-
-        return purifiableStatusesIDs.Any(id => Player.HasStatus(false, (StatusID)id)) && PurifyPvP.CanUse(out action);
-    }
-    #endregion
-
     #region oGCDs
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.EmergencyAbility(nextGCD, out action);
         }
 
-        if (DoPurify(out action))
+        if (PurifyPvP.CanUse(out action))
         {
             return true;
         }
@@ -91,10 +68,9 @@ public sealed class MNK_DefaultPvP : MonkRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out action);
         }
 
         if (RisingPhoenixPvP.CanUse(out action, usedUp: true) && HasHostilesInRange)
@@ -112,10 +88,9 @@ public sealed class MNK_DefaultPvP : MonkRotation
 
     protected override bool MoveForwardAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.MoveForwardAbility(nextGCD, out action);
         }
 
         return base.MoveForwardAbility(nextGCD, out action);
@@ -125,10 +100,9 @@ public sealed class MNK_DefaultPvP : MonkRotation
     #region GCDs
     protected override bool GeneralGCD(out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.GeneralGCD(out action);
         }
 
         if (PhantomRushPvP.CanUse(out action))

@@ -73,10 +73,9 @@ public sealed class MCH_Reborn : MachinistRotation
     [RotationDesc(ActionID.TacticianPvE, ActionID.DismantlePvE)]
     protected override bool DefenseAreaAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (IsOverheated || HasWildfire || HasFullMetalMachinist)
         {
-            return false;
+            return base.DefenseAreaAbility(nextGCD, out act);
         }
 
         if (TacticianPvE.CanUse(out act))
@@ -95,10 +94,9 @@ public sealed class MCH_Reborn : MachinistRotation
     // Logic for using attack abilities outside of GCD, focusing on burst windows and cooldown management.
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         if (FullMetalFieldPvE.EnoughLevel && HasFullMetalMachinist && IsLastAction(false, WildfirePvE))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         // Reassemble Logic
@@ -251,7 +249,7 @@ public sealed class MCH_Reborn : MachinistRotation
 
         if (IsLastAction(false, HyperchargePvE) && HeatBlastPvE.EnoughLevel)
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
 
         // Drill AOE

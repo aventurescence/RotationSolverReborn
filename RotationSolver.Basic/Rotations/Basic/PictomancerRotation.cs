@@ -743,28 +743,18 @@ public partial class PictomancerRotation
         };
     }
 
-    static partial void ModifyCreatureMotifPvP(ref ActionSetting setting)
-    {
-        setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.CreatureMotifPvP) != ActionID.CreatureMotifPvP;
-        setting.CreateConfig = () => new ActionConfig()
-        {
-            AoeCount = 1,
-        };
-        setting.IsFriendly = true;
-    }
-
     static partial void ModifyLivingMusePvP(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.LivingMusePvP) != ActionID.LivingMusePvP;
         setting.CreateConfig = () => new ActionConfig()
         {
-            AoeCount = 1,
+            IsEnabled = false,
         };
     }
 
     static partial void ModifyMogOfTheAgesPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.MooglePortrait];
+        setting.MPOverride = () => 0;
         setting.TargetStatusProvide = [StatusID.Silence_1347];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -871,6 +861,7 @@ public partial class PictomancerRotation
     static partial void ModifyPomMotifPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.PomSketch];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.PomMotif];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -882,6 +873,7 @@ public partial class PictomancerRotation
     static partial void ModifyWingMotifPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.WingSketch];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.WingMotif];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -893,6 +885,7 @@ public partial class PictomancerRotation
     static partial void ModifyClawMotifPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.ClawSketch];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.ClawMotif];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -904,6 +897,7 @@ public partial class PictomancerRotation
     static partial void ModifyMawMotifPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.MawSketch];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.MawMotif];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -912,9 +906,18 @@ public partial class PictomancerRotation
         setting.IsFriendly = true;
     }
 
+    static partial void ModifyCreatureMotifPvP(ref ActionSetting setting)
+    {
+        setting.CreateConfig = () => new ActionConfig()
+        {
+            IsEnabled = false,
+        };
+    }
+
     static partial void ModifyPomMusePvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.PomMotif];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.WingSketch];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -925,6 +928,7 @@ public partial class PictomancerRotation
     static partial void ModifyWingedMusePvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.WingMotif];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.ClawSketch];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -935,6 +939,7 @@ public partial class PictomancerRotation
     static partial void ModifyClawedMusePvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.ClawMotif];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.MawSketch];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -945,6 +950,7 @@ public partial class PictomancerRotation
     static partial void ModifyFangedMusePvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.MawMotif];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.PomSketch, StatusID.MadeenPortrait];
         setting.CreateConfig = () => new ActionConfig()
         {
@@ -955,6 +961,7 @@ public partial class PictomancerRotation
     static partial void ModifyRetributionOfTheMadeenPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.MadeenPortrait];
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -974,6 +981,7 @@ public partial class PictomancerRotation
     static partial void ModifyStarPrismPvP(ref ActionSetting setting)
     {
         setting.StatusNeed = [StatusID.StarPrism];
+        setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.StarPrism];
         setting.CreateConfig = () => new ActionConfig()
         {

@@ -440,6 +440,14 @@ public static class ObjectHelper
             || ActionManager.CanUseActionOnTarget((uint)ActionID.CurePvE, (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)obj.Struct()));
     }
 
+    internal static unsafe bool IsOtherPlayerOutOfDuty(this ICharacter obj)
+    {
+        return obj.GameObjectId is not 0
+            && !DataCenter.IsPvP && obj is IPlayerCharacter
+            && (ActionManager.CanUseActionOnTarget((uint)ActionID.RaisePvE, (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)obj.Struct())
+            || ActionManager.CanUseActionOnTarget((uint)ActionID.CurePvE, (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)obj.Struct()));
+    }
+
     internal static unsafe bool CanBeRaised(this IBattleChara battleChara)
     {
         if (battleChara == null)

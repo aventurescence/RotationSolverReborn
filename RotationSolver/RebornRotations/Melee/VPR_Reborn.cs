@@ -261,7 +261,7 @@ public sealed class VPR_Reborn : ViperRotation
         if (AbilityPrio2 &&
             !NoAbilityReady)
         {
-            return false;
+            return base.GeneralGCD(out act);
         }
             
         ////Reawaken Combo

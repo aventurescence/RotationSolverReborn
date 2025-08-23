@@ -137,7 +137,7 @@ public partial class CustomRotation
 
     static partial void ModifyPurifyPvP(ref ActionSetting setting)
     {
-        setting.TargetType = TargetType.Dispel;
+        setting.ActionCheck = () => Player.HasStatus(false, StatusHelper.PurifyPvPStatuses);
         setting.IsFriendly = true;
     }
 

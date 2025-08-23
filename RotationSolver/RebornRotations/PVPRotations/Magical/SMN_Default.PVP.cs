@@ -7,42 +7,19 @@ public class SMN_DefaultPvP : SummonerRotation
 {
     #region Configurations
 
-    [RotationConfig(CombatType.PvP, Name = "Use Purify")]
-    public bool UsePurifyPvP { get; set; } = true;
-
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool RespectGuard { get; set; } = true;
-    #endregion
-
-    #region Standard PVP Utilities
-    private bool DoPurify(out IAction? action)
-    {
-        action = null;
-        if (!UsePurifyPvP)
-        {
-            return false;
-        }
-
-        List<int> purifiableStatusesIDs = new()
-        {
-            // Stun, DeepFreeze, HalfAsleep, Sleep, Bind, Heavy, Silence
-            1343, 3219, 3022, 1348, 1345, 1344, 1347
-        };
-
-        return purifiableStatusesIDs.Any(id => Player.HasStatus(false, (StatusID)id)) && PurifyPvP.CanUse(out action);
-    }
     #endregion
 
     #region oGCDs
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.EmergencyAbility(nextGCD, out action);
         }
 
-        if (DoPurify(out action))
+        if (PurifyPvP.CanUse(out action))
         {
             return true;
         }
@@ -53,10 +30,9 @@ public class SMN_DefaultPvP : SummonerRotation
     [RotationDesc(ActionID.RadiantAegisPvP)]
     protected override bool DefenseSingleAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.DefenseSingleAbility(nextGCD, out action);
         }
 
         if (RadiantAegisPvP.CanUse(out action))
@@ -69,10 +45,9 @@ public class SMN_DefaultPvP : SummonerRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out action);
         }
 
         if (DeathflarePvP.CanUse(out action))
@@ -96,10 +71,9 @@ public class SMN_DefaultPvP : SummonerRotation
     [RotationDesc(ActionID.CrimsonCyclonePvP)]
     protected override bool MoveForwardAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.MoveForwardAbility(nextGCD, out action);
         }
 
         //if (CometPvP.CanUse(out action)) return true;
@@ -126,10 +100,9 @@ public class SMN_DefaultPvP : SummonerRotation
     #region GCDs
     protected override bool GeneralGCD(out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.GeneralGCD(out action);
         }
 
         if (AstralImpulsePvP.CanUse(out action))
@@ -170,5 +143,4 @@ public class SMN_DefaultPvP : SummonerRotation
         return base.GeneralGCD(out action);
     }
     #endregion
-
 }

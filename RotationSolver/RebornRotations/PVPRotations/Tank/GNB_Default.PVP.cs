@@ -6,30 +6,9 @@
 public sealed class GNB_DefaultPvP : GunbreakerRotation
 {
     #region Configurations
-    [RotationConfig(CombatType.PvP, Name = "Use Purify")]
-    public bool UsePurifyPvP { get; set; } = true;
 
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool RespectGuard { get; set; } = true;
-    #endregion
-
-    #region Standard PVP Utilities
-    private bool DoPurify(out IAction? action)
-    {
-        action = null;
-        if (!UsePurifyPvP)
-        {
-            return false;
-        }
-
-        List<int> purifiableStatusesIDs = new()
-        {
-            // Stun, DeepFreeze, HalfAsleep, Sleep, Bind, Heavy, Silence
-            1343, 3219, 3022, 1348, 1345, 1344, 1347
-        };
-
-        return purifiableStatusesIDs.Any(id => Player.HasStatus(false, (StatusID)id)) && PurifyPvP.CanUse(out action);
-    }
     #endregion
 
     #region Gunbreaker Utilities
@@ -37,10 +16,9 @@ public sealed class GNB_DefaultPvP : GunbreakerRotation
     [RotationDesc(ActionID.HeartOfCorundumPvP)]
     protected override bool DefenseSingleAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.DefenseSingleAbility(nextGCD, out action);
         }
 
         if (HeartOfCorundumPvP.CanUse(out action))
@@ -104,13 +82,12 @@ public sealed class GNB_DefaultPvP : GunbreakerRotation
     #region oGCDs
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.EmergencyAbility(nextGCD, out action);
         }
 
-        if (DoPurify(out action))
+        if (PurifyPvP.CanUse(out action))
         {
             return true;
         }
@@ -125,10 +102,9 @@ public sealed class GNB_DefaultPvP : GunbreakerRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out action);
         }
 
         if (!Player.HasStatus(true, StatusID.NoMercy_3042) && RoughDividePvP.CanUse(out action, usedUp: true))
@@ -184,11 +160,9 @@ public sealed class GNB_DefaultPvP : GunbreakerRotation
     #region GCDs
     protected override bool GeneralGCD(out IAction? action)
     {
-        action = null;
-
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.GeneralGCD(out action);
         }
 
         // I could totally collapse these into one function but *dab*
@@ -239,8 +213,6 @@ public sealed class GNB_DefaultPvP : GunbreakerRotation
         }
 
         return base.GeneralGCD(out action);
-
     }
     #endregion
-
 }

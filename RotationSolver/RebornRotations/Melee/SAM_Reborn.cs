@@ -106,14 +106,13 @@ public sealed class SAM_Reborn : SamuraiRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
-        act = null;
         bool MeleeMeditationcheck = nextGCD.IsTheSameTo(true, ActionID.OgiNamikiriPvE, ActionID.HiganbanaPvE, ActionID.TenkaGokenPvE, ActionID.MidareSetsugekkaPvE, ActionID.TendoGokenPvE, ActionID.TendoSetsugekkaPvE, ActionID.TendoGokenPvE);
         bool isTargetBoss = CurrentTarget?.IsBossFromTTK() ?? false;
         bool isTargetDying = CurrentTarget?.IsDying() ?? false;
 
         if (EnableTEAChecker && Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25)
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         if (MeikyoShisuiPvE.CanUse(out act, usedUp: !EnhancedMeikyoShisuiTrait.EnoughLevel || (EnhancedMeikyoShisuiTrait.EnoughLevel && MeikyoShisuiPvE.Cooldown.WillHaveXChargesGCD(2, 1)) || TsubamegaeshiActionReady)

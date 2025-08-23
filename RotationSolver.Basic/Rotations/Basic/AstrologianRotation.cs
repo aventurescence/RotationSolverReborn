@@ -575,6 +575,7 @@ public partial class AstrologianRotation
     {
         setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.MinorArcanaPvP) == ActionID.LadyOfCrownsPvP;
         setting.IsFriendly = true;
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -585,6 +586,7 @@ public partial class AstrologianRotation
     {
         setting.ActionCheck = () => Service.GetAdjustedActionId(ActionID.MinorArcanaPvP) == ActionID.LordOfCrownsPvP;
         setting.IsFriendly = false;
+        setting.MPOverride = () => 0;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,
@@ -611,6 +613,7 @@ public partial class AstrologianRotation
     {
         setting.ActionCheck = () => Player.HasStatus(true, StatusID.RetrogradeReady);
         setting.IsFriendly = true;
+        setting.MPOverride = () => 0;
         setting.SpecialType = SpecialActionType.MovingBackward;
     }
     #endregion

@@ -25,35 +25,15 @@ public sealed class DRG_DefaultPvP : DragoonRotation
     public bool JumpYeet { get; set; } = true;
     #endregion
 
-    #region Standard PVP Utilities
-    private bool DoPurify(out IAction? action)
-    {
-        action = null;
-        if (!UsePurifyPvP)
-        {
-            return false;
-        }
-
-        List<int> purifiableStatusesIDs = new()
-        {
-            // Stun, DeepFreeze, HalfAsleep, Sleep, Bind, Heavy, Silence
-            1343, 3219, 3022, 1348, 1345, 1344, 1347
-        };
-
-        return purifiableStatusesIDs.Any(id => Player.HasStatus(false, (StatusID)id)) && PurifyPvP.CanUse(out action);
-    }
-    #endregion
-
     #region oGCDs
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.EmergencyAbility(nextGCD, out action);
         }
 
-        if (DoPurify(out action))
+        if (PurifyPvP.CanUse(out action))
         {
             return true;
         }
@@ -78,10 +58,9 @@ public sealed class DRG_DefaultPvP : DragoonRotation
 
     protected override bool DefenseSingleAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.DefenseSingleAbility(nextGCD, out action);
         }
 
         return base.DefenseSingleAbility(nextGCD, out action);
@@ -89,10 +68,9 @@ public sealed class DRG_DefaultPvP : DragoonRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out action);
         }
 
         if (HorridRoarPvP.CanUse(out action))
@@ -120,10 +98,9 @@ public sealed class DRG_DefaultPvP : DragoonRotation
 
     protected override bool MoveForwardAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.MoveForwardAbility(nextGCD, out action);
         }
 
         if (HighJumpPvP.CanUse(out action))
@@ -136,10 +113,9 @@ public sealed class DRG_DefaultPvP : DragoonRotation
 
     protected override bool MoveBackAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.MoveBackAbility(nextGCD, out action);
         }
 
         if (ElusiveJumpPvP.CanUse(out action))
@@ -154,10 +130,9 @@ public sealed class DRG_DefaultPvP : DragoonRotation
     #region GCDs
     protected override bool GeneralGCD(out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.GeneralGCD(out action);
         }
 
         if (WyrmwindThrustPvP.CanUse(out action))

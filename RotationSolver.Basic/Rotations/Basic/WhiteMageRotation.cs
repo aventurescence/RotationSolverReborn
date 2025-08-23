@@ -388,7 +388,8 @@ public partial class WhiteMageRotation
 
     static partial void ModifyAquaveilPvP(ref ActionSetting setting)
     {
-
+        setting.TargetStatusNeed = StatusHelper.PurifyPvPStatuses;
+        setting.IsFriendly = true;
     }
 
     static partial void ModifyMiracleOfNaturePvP(ref ActionSetting setting)

@@ -117,11 +117,6 @@ public readonly struct ActionBasicInfo
     {
         get
         {
-            if (IsPvP && ID != 29711)
-            {
-                return 0;
-            }
-
             uint? mpOver = _action.Setting.MPOverride?.Invoke();
             if (mpOver.HasValue)
             {

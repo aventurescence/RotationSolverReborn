@@ -452,8 +452,8 @@ public partial class BardRotation
 
     static partial void ModifyTheWardensPaeanPvP(ref ActionSetting setting)
     {
-        setting.TargetStatusProvide = [StatusID.WardensGrace];
-        setting.TargetType = TargetType.Dispel;
+        setting.TargetStatusNeed = StatusHelper.PurifyPvPStatuses;
+        setting.IsFriendly = true;
     }
 
     #endregion

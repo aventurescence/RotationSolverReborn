@@ -7,9 +7,6 @@ public class BLM_DefaultPVP : BlackMageRotation
 {
     #region Configurations
 
-    [RotationConfig(CombatType.PvP, Name = "Use Purify")]
-    public bool UsePurifyPvP { get; set; } = true;
-
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool RespectGuard { get; set; } = true;
 
@@ -22,44 +19,28 @@ public class BLM_DefaultPVP : BlackMageRotation
     public float XenoglossyLowHP { get; set; } = 0.5f;
     #endregion
 
-    #region Standard PVP Utilities
-    private bool DoPurify(out IAction? action)
-    {
-        action = null;
-        if (!UsePurifyPvP)
-        {
-            return false;
-        }
-
-        List<int> purifiableStatusesIDs = new()
-        {
-            // Stun, DeepFreeze, HalfAsleep, Sleep, Bind, Heavy, Silence
-            1343, 3219, 3022, 1348, 1345, 1344, 1347
-        };
-
-        return purifiableStatusesIDs.Any(id => Player.HasStatus(false, (StatusID)id)) && PurifyPvP.CanUse(out action);
-    }
-    #endregion
-
     #region oGCDs
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.EmergencyAbility(nextGCD, out action);
         }
 
-        return DoPurify(out action) || base.EmergencyAbility(nextGCD, out action);
+        if (PurifyPvP.CanUse(out action))
+        {
+            return true;
+        }
+
+        return base.EmergencyAbility(nextGCD, out action);
     }
 
     [RotationDesc(ActionID.WreathOfIcePvP)]
     protected override bool DefenseSingleAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.DefenseSingleAbility(nextGCD, out action);
         }
 
         if (WreathOfIcePvP.CanUse(out action))
@@ -87,10 +68,9 @@ public class BLM_DefaultPVP : BlackMageRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out action);
         }
 
         //if (CometPvP.CanUse(out action)) return true;
@@ -114,10 +94,9 @@ public class BLM_DefaultPVP : BlackMageRotation
 
     protected override bool GeneralAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.GeneralAbility(nextGCD, out action);
         }
 
         if (WreathOfFirePvP.CanUse(out action) && InCombat)
@@ -133,10 +112,9 @@ public class BLM_DefaultPVP : BlackMageRotation
     #region GCDs
     protected override bool GeneralGCD(out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.GeneralGCD(out action);
         }
 
         if (XenoglossyPvP.CanUse(out action, usedUp: true)
@@ -183,5 +161,4 @@ public class BLM_DefaultPVP : BlackMageRotation
         return base.GeneralGCD(out action);
     }
     #endregion
-
 }

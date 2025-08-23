@@ -186,6 +186,19 @@ public static class StatusHelper
     ];
 
     /// <summary>
+    /// 
+    /// </summary>
+    public static StatusID[] PurifyPvPStatuses { get; } =
+    [
+        StatusID.Stun_1343,
+        StatusID.Heavy_1344,
+        StatusID.Bind_1345,
+        StatusID.Silence_1347,
+        StatusID.DeepFreeze_3219,
+        StatusID.MiracleOfNature,
+    ];
+
+    /// <summary>
     /// Determines if the specified battle character has reached the maximum number of status effects.
     /// </summary>
     /// <param name="battleChara">The battle character to check.</param>

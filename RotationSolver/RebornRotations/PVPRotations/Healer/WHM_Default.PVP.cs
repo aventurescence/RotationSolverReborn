@@ -7,50 +7,37 @@ public class WHM_DefaultPVP : WhiteMageRotation
 {
     #region Configurations
 
-    [RotationConfig(CombatType.PvP, Name = "Use Purify")]
-    public bool UsePurifyPvP { get; set; } = true;
+    [RotationConfig(CombatType.PvP, Name = "Use Aquaveil on other players")]
+    public bool AquaveilEsuna { get; set; } = false;
 
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool RespectGuard { get; set; } = true;
     #endregion
 
-    #region Standard PVP Utilities
-    private bool DoPurify(out IAction? action)
-    {
-        action = null;
-
-        List<int> purifiableStatusesIDs = new()
-        {
-            // Stun, DeepFreeze, HalfAsleep, Sleep, Bind, Heavy, Silence
-            1343, 3219, 3022, 1348, 1345, 1344, 1347
-        };
-
-        if (purifiableStatusesIDs.Any(id => Player.HasStatus(false, (StatusID)id)))
-        {
-            if (AquaveilPvP.CanUse(out action))
-            {
-                return true;
-            }
-
-            if (UsePurifyPvP && PurifyPvP.CanUse(out action))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-    #endregion
-
     #region oGCDs
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.EmergencyAbility(nextGCD, out action);
         }
-        if (DoPurify(out action))
+
+        if (AquaveilEsuna && AquaveilPvP.CanUse(out action))
+        {
+            return true;
+        }
+        if (Player.HasStatus(false, StatusHelper.PurifyPvPStatuses))
+        {
+            if (AquaveilPvP.CanUse(out action))
+            {
+                if (AquaveilPvP.Target.Target == Player)
+                {
+                    return true;
+                }
+            }
+        }
+
+        if (PurifyPvP.CanUse(out action))
         {
             return true;
         }
@@ -60,10 +47,9 @@ public class WHM_DefaultPVP : WhiteMageRotation
 
     protected override bool DefenseSingleAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.DefenseSingleAbility(nextGCD, out action);
         }
 
         return base.DefenseSingleAbility(nextGCD, out action);
@@ -71,10 +57,9 @@ public class WHM_DefaultPVP : WhiteMageRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.AttackAbility(nextGCD, out action);
         }
 
         if (DiabrosisPvP.CanUse(out action))
@@ -89,10 +74,9 @@ public class WHM_DefaultPVP : WhiteMageRotation
     #region GCDs
     protected override bool DefenseSingleGCD(out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.DefenseSingleGCD(out action);
         }
 
         if (StoneskinIiPvP.CanUse(out action))
@@ -105,10 +89,9 @@ public class WHM_DefaultPVP : WhiteMageRotation
 
     protected override bool HealSingleGCD(out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.HealSingleGCD(out action);
         }
 
         if (HaelanPvP.CanUse(out action))
@@ -131,10 +114,9 @@ public class WHM_DefaultPVP : WhiteMageRotation
 
     protected override bool GeneralGCD(out IAction? action)
     {
-        action = null;
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
         {
-            return false;
+            return base.GeneralGCD(out action);
         }
 
         if (AfflatusMiseryPvP.CanUse(out action))
