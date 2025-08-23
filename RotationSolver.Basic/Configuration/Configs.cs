@@ -125,6 +125,9 @@ internal partial class Configs : IPluginConfiguration
     Filter = UiInformation)]
     private static readonly bool _showInfoOnDtr = true;
 
+    [UI("DTR Behaviour", Filter = UiInformation, Parent = nameof(ShowInfoOnDtr))]
+    public DTRType DTRType { get; set; } = DTRType.DTRNormal;
+
     [ConditionBool, UI("Display plugin status in toast popup",
     Description = "Show a toast notification with the combat state when changed.",
     Filter = UiInformation)]
@@ -872,14 +875,11 @@ internal partial class Configs : IPluginConfiguration
         Filter = TargetConfig)]
     private static readonly bool _bigHP = false;
 
-    [ConditionBool, UI("Change clicking the DTR bar behaviour to cycle between Off and Manual (Overrides below option).",
-        Filter = TargetConfig)]
-    private static readonly bool _dtrManual = false;
+    [UI("/rotation Cycle behaviour", Filter = TargetConfig)]
+    public CycleType CycleType { get; set; } = CycleType.CycleNormal;
 
-    [ConditionBool, UI("Change clicking the DTR bar behaviour to cycle through each Target Type selected.",
-        Filter = TargetConfig)]
-    private static readonly bool _dtrCycle = false;
-
+    [JobConfig, UI("Engage settings", Filter = TargetConfig, PvPFilter = JobFilterType.NoJob)]
+    private readonly TargetHostileType _hostileType = TargetHostileType.AllTargetsWhenSoloInDuty;
     #endregion
 
     #region Integer
@@ -1013,9 +1013,6 @@ internal partial class Configs : IPluginConfiguration
     [UI("HP%% needed to use single/self targetted mitigation on Tanks", Parent = nameof(UseDefenseAbility),
         PvEFilter = JobFilterType.Tank)]
     private readonly float _healthForAutoDefense = 1;
-
-    [JobConfig, UI("Engage settings", Filter = TargetConfig, PvPFilter = JobFilterType.NoJob)]
-    private readonly TargetHostileType _hostileType = TargetHostileType.AllTargetsWhenSoloInDuty;
 
     [JobConfig]
     private readonly string _PvPRotationChoice = string.Empty;

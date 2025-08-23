@@ -13,6 +13,10 @@ public static partial class RSCommands
     {
         switch (otherType)
         {
+            case OtherCommandType.Cycle:
+                ExecuteCycleCommand();
+                break;
+
             case OtherCommandType.Rotations:
                 ExecuteRotationCommand(str);
                 break;
@@ -36,6 +40,30 @@ public static partial class RSCommands
             case OtherCommandType.NextAction:
                 DoAction();
                 break;
+        }
+    }
+
+    private static void ExecuteCycleCommand()
+    {
+        if (Service.Config.CycleType == CycleType.CycleNormal)
+        {
+            CycleStateWithOneTargetTypes();
+        }
+        else if (Service.Config.CycleType == CycleType.CycleAllAuto)
+        {
+            CycleStateWithAllTargetTypes();
+        }
+        else if (Service.Config.CycleType == CycleType.CycleAuto)
+        {
+            CycleStateAuto();
+        }
+        else if (Service.Config.CycleType == CycleType.CycleManual)
+        {
+            CycleStateManual();
+        }
+        else if (Service.Config.CycleType == CycleType.CycleManualAuto)
+        {
+            CycleStateManualAuto();
         }
     }
 

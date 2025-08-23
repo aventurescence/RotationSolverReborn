@@ -28,12 +28,21 @@ namespace RotationSolver.Commands
 
         private static void OnCommand(string command, string arguments)
         {
-            DoOneCommand(arguments);
+            DoOneCommand(arguments ?? string.Empty);
         }
 
         private static void DoOneCommand(string command)
         {
-            if (command.Equals("cancel", StringComparison.OrdinalIgnoreCase))
+            command = (command ?? string.Empty).Trim();
+
+            // No args => open config
+            if (command.Length == 0)
+            {
+                RotationSolverPlugin.OpenConfigWindow();
+                return;
+            }
+
+            if (string.Equals(command, "cancel", StringComparison.OrdinalIgnoreCase))
             {
                 command = "off";
             }
@@ -90,9 +99,19 @@ namespace RotationSolver.Commands
         private static bool TryGetOneEnum<T>(string command, out T type) where T : struct, Enum
         {
             type = default;
+
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                return false;
+            }
+
+            // Match only the first token exactly (case-insensitive).
+            int spaceIdx = command.IndexOf(' ');
+            string token = spaceIdx >= 0 ? command[..spaceIdx] : command;
+
             foreach (T c in Enum.GetValues<T>())
             {
-                if (command.StartsWith(c.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(token, c.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     type = c;
                     return true;

@@ -262,6 +262,7 @@ namespace RotationSolver.Commands
                 if (Service.Config.AutoOnPvPMatchStart &&
                     Svc.Condition[ConditionFlag.BetweenAreas] &&
                     Svc.Condition[ConditionFlag.BoundByDuty] &&
+                    !DataCenter.State &&
                     (DataCenter.Territory?.IsPvP ?? false))
                 {
                     DoStateCommandType(StateCommandType.Auto);

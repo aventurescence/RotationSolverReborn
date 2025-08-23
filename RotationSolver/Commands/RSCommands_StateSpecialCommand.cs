@@ -80,6 +80,145 @@ namespace RotationSolver.Commands
             return stateType;
         }
 
+        public static void CycleStateManualAuto()
+        {
+            // If currently Off, go to Manual
+            if (!DataCenter.State)
+            {
+                DoStateCommandType(StateCommandType.Manual);
+                return;
+            }
+
+            // If currently in Manual mode, turn Off
+            if (DataCenter.IsManual)
+            {
+                DoStateCommandType(StateCommandType.Auto);
+                return;
+            }
+
+            // If currently On but not Manual, switch to Manual
+            DoStateCommandType(StateCommandType.Manual);
+        }
+
+        public static void CycleStateAuto()
+        {
+            // If currently Off, go to Auto
+            if (!DataCenter.State)
+            {
+                DoStateCommandType(StateCommandType.Auto);
+                return;
+            }
+
+            // If currently in Auto mode, turn Off
+            if (DataCenter.State)
+            {
+                DoStateCommandType(StateCommandType.Off);
+                return;
+            }
+
+            // If currently On but not Auto, switch to Auto
+            DoStateCommandType(StateCommandType.Manual);
+        }
+
+        public static void CycleStateManual()
+        {
+            // If currently Off, go to Manual
+            if (!DataCenter.State)
+            {
+                DoStateCommandType(StateCommandType.Manual);
+                return;
+            }
+
+            // If currently in Manual mode, turn Off
+            if (DataCenter.IsManual)
+            {
+                DoStateCommandType(StateCommandType.Off);
+                return;
+            }
+
+            // If currently On but not Manual, switch to Manual
+            DoStateCommandType(StateCommandType.Manual);
+        }
+
+        public static void CycleStateWithAllTargetTypes()
+        {
+            // If currently Off, start with the first TargetType
+            if (!DataCenter.State)
+            {
+                if (Service.Config.TargetingTypes.Count > 0)
+                {
+                    Service.Config.TargetingIndex = 0;
+                    DoStateCommandType(StateCommandType.Auto, 0);
+                }
+                else
+                {
+                    // No targeting types configured, go to Manual
+                    DoStateCommandType(StateCommandType.Manual);
+                }
+                return;
+            }
+
+            // If currently in Auto mode, cycle through all TargetTypes
+            if (DataCenter.State && !DataCenter.IsManual)
+            {
+                int nextIndex = Service.Config.TargetingIndex + 1;
+
+                // If we've gone through all TargetTypes, switch to Manual
+                if (nextIndex >= Service.Config.TargetingTypes.Count)
+                {
+                    DoStateCommandType(StateCommandType.Manual);
+                }
+                else
+                {
+                    // Move to next TargetType
+                    Service.Config.TargetingIndex = nextIndex;
+                    DoStateCommandType(StateCommandType.Auto, nextIndex);
+                }
+                return;
+            }
+
+            // If currently in Manual mode, turn off
+            if (DataCenter.State && DataCenter.IsManual)
+            {
+                DoStateCommandType(StateCommandType.Off);
+                return;
+            }
+        }
+
+        public static void CycleStateWithOneTargetTypes()
+        {
+            // If currently Off, go to Auto using the highest TargetingIndex (last configured type)
+            if (!DataCenter.State)
+            {
+                if (Service.Config.TargetingTypes.Count > 0)
+                {
+                    int lastIdx = Service.Config.TargetingTypes.Count - Service.Config.TargetingTypes.Count;
+                    Service.Config.TargetingIndex = lastIdx;
+                    DoStateCommandType(StateCommandType.Auto, lastIdx);
+                }
+                else
+                {
+                    // No targeting types configured, go to Manual
+                    DoStateCommandType(StateCommandType.Manual);
+                }
+                return;
+            }
+
+            // If currently in Auto mode, switch to Manual
+            if (DataCenter.State && !DataCenter.IsManual)
+            {
+                DoStateCommandType(StateCommandType.Manual);
+                return;
+            }
+
+            // If currently in Manual mode, turn Off
+            if (DataCenter.State && DataCenter.IsManual)
+            {
+                DoStateCommandType(StateCommandType.Off);
+                return;
+            }
+        }
+
         private static void UpdateTargetingIndex(ref int index)
         {
             if (index == -1)

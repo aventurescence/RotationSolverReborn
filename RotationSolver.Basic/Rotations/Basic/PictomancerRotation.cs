@@ -980,7 +980,7 @@ public partial class PictomancerRotation
 
     static partial void ModifyStarPrismPvP(ref ActionSetting setting)
     {
-        setting.StatusNeed = [StatusID.StarPrism];
+        setting.StatusNeed = [StatusID.Starstruck_4118];
         setting.MPOverride = () => 0;
         setting.StatusProvide = [StatusID.StarPrism];
         setting.CreateConfig = () => new ActionConfig()
