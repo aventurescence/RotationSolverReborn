@@ -331,7 +331,7 @@ public partial class BlackMageRotation
 
     static partial void ModifyAetherialManipulationPvE(ref ActionSetting setting)
     {
-        setting.SpecialType = SpecialActionType.MovingForward;
+        setting.TargetType = TargetType.FriendMove;
     }
 
     static partial void ModifyFlarePvE(ref ActionSetting setting)

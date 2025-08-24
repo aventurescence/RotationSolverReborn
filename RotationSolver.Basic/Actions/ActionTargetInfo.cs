@@ -1222,6 +1222,18 @@ public struct ActionTargetInfo(IBaseAction action)
                 // No filtering needed for Move type
                 break;
 
+            case TargetType.FriendMove:
+                {
+                    if (Svc.Targets.FocusTarget != null)
+                    {
+                        if (Svc.Targets.FocusTarget is IBattleChara focus && focus.IsParty())
+                        {
+                            return focus;
+                        }
+                    }
+                }
+                break;
+
             default:
                 {
                     var filtered = new List<IBattleChara>();
@@ -2422,6 +2434,7 @@ public enum TargetType : byte
     Death,
     Dispel,
     Move,
+    FriendMove,
     BeAttacked,
     Heal,
     Tank,

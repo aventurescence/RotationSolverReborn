@@ -219,20 +219,20 @@ public readonly struct ActionBasicInfo
     /// <returns>True if the action passes the basic check; otherwise, false.</returns>
     internal readonly bool BasicCheck(bool skipStatusProvideCheck, bool skipStatusNeed,  bool skipComboCheck, bool skipCastingCheck, bool checkActionManager = false)
     {
-
         // 1. Player and action slot checks
         if (Player.Object.StatusList == null)
         {
             return false;
         }
-        if (!IsActionEnabled() || !IsOnSlot)
+
+        if (IsLimitBreak)
         {
             return false;
         }
 
-        if (IsLimitBreak && !DataCenter.IsPvP)
+        if (!IsActionEnabled() || !IsOnSlot)
         {
-            return true;
+            return false;
         }
 
         // 2. Basic requirements: not disabled, enough level, enough MP, spell unlocked
