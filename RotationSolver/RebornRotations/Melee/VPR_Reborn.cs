@@ -574,17 +574,27 @@ public sealed class VPR_Reborn : ViperRotation
                     {
                         return true;
                     }
+
+                    if (HuntersCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
+                    {
+                        return true;
+                    }
+
+                    if (SwiftskinsCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
+                    {
+                        return true;
+                    }
                 }
 
                 if (!IsSwift)
                 {
-                    if (SwiftskinsCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true, skipAoeCheck: true))
+                    if (SwiftskinsCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
                         return true;
                 }
 
                 if (!IsHunter)
                 {
-                    if (HuntersCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true, skipAoeCheck: true))
+                    if (HuntersCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
                         return true;
                 }
             }

@@ -1182,8 +1182,21 @@ internal static class DataCenter
     {
         return IsCastingVfx(VfxDataQueue, s =>
         {
-            return Player.AvailableThreadSafe && (!Player.Object.IsJobCategory(JobRole.Tank) || s.ObjectId == Player.Object.GameObjectId) && (s.Path.StartsWith("vfx/lockon/eff/tank_lockon")
-            || s.Path.StartsWith("vfx/lockon/eff/tank_laser"));
+            if (!Player.AvailableThreadSafe)
+            {
+                return false;
+            }
+
+            // For x6fe, ignore target and player role checks.
+            if (s.Path.StartsWith("vfx/lockon/eff/x6fe"))
+            {
+                return true;
+            }
+
+            // Preserve original checks for other tank lock-on effects.
+            return (!Player.Object.IsJobCategory(JobRole.Tank) || s.ObjectId == Player.Object.GameObjectId)
+                   && (s.Path.StartsWith("vfx/lockon/eff/tank_lockon")
+                       || s.Path.StartsWith("vfx/lockon/eff/tank_laser"));
         });
     }
 

@@ -3258,6 +3258,7 @@ public partial class RotationConfigWindow : Window
         ImGui.Text($"Combo Time: {DataCenter.ComboTime}");
         ImGui.Text($"TargetingType: {DataCenter.TargetingType}");
         ImGui.Spacing();
+        ImGui.Text($"IsHostileCastingToTank: {DataCenter.IsHostileCastingToTank}");
         ImGui.Text($"AttackedTargets: {DataCenter.AttackedTargets?.Count ?? 0}");
         if (DataCenter.AttackedTargets != null)
         {
@@ -3342,7 +3343,6 @@ public partial class RotationConfigWindow : Window
         }
 
         ImGui.Text($"DPSTaken: {DataCenter.DPSTaken}");
-        //ImGui.Text($"IsHostileCastingToTank: {DataCenter.IsHostileCastingToTank}");
         ImGui.Text($"CurrentRotation: {DataCenter.CurrentRotation}");
         ImGui.Text($"Job: {DataCenter.Job}");
         ImGui.Text($"JobRange: {DataCenter.JobRange}");
