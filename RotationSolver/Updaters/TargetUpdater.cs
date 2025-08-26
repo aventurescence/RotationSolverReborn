@@ -199,7 +199,7 @@ internal static partial class TargetUpdater
                         }
                     }
                 }
-                else if(raisetype == RaiseType.All || raisetype == RaiseType.AllOutOfDuty)
+                else if (raisetype == RaiseType.All || raisetype == RaiseType.AllOutOfDuty)
                 {
                     if (DataCenter.AllianceMembers != null)
                     {

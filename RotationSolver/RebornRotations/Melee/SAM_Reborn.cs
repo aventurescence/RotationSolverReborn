@@ -405,6 +405,16 @@ public sealed class SAM_Reborn : SamuraiRotation
                 return true;
             }
 
+            if (!HasFugetsu && JinpuPvE.CanUse(out act))
+            {
+                return true;
+            }
+
+            if (!HasFuka && ShifuPvE.CanUse(out act))
+            {
+                return true;
+            }
+
             if (!HasFugetsu)
             {
                 if (JinpuPvE.CanUse(out act))

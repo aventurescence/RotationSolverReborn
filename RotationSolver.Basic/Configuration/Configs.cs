@@ -488,29 +488,18 @@ internal partial class Configs : IPluginConfiguration
     public float HealthSelfRatio { get; set; } = 0.4f;
 
     #region
-    [JobConfig, UI("Hard cast Raise while Swiftcast is on cooldown if Swiftcast cooldown is higher than Raise cast time (Experimental)",
-        Filter = HealingActionCondition, Section = 2,
-        PvEFilter = JobFilterType.Raise, PvPFilter = JobFilterType.NoJob)]
-    private static readonly bool _raiseSwiftCooldown = false;
-
-    [JobConfig, UI("Hard cast Raise while Swiftcast is on cooldown if all other healers are dead (Experimental)",
-        Filter = HealingActionCondition, Section = 2,
-        PvEFilter = JobFilterType.Raise, PvPFilter = JobFilterType.NoJob)]
-    private static readonly bool _raiseHealerByCasting = false;
-
-    [JobConfig, UI("Hard cast Raise while Swiftcast is on cooldown",
-        Filter = HealingActionCondition, Section = 2,
-        PvEFilter = JobFilterType.Raise, PvPFilter = JobFilterType.NoJob)]
-    private static readonly bool _raisePlayerByCasting = true;
+    [JobConfig, UI("Prioritize raising dead players over Healing/Defense.",
+        Filter = HealingActionCondition, Section = 2)]
+    private static readonly bool _raisePlayerFirst = false;
 
     [JobConfig, UI("Raise player by using Swiftcast/Dualcast if available", Description = "If this is disabled, you will never use Swiftcast/Dualcast to raise players.",
         Filter = HealingActionCondition, Section = 2,
         PvEFilter = JobFilterType.Raise, PvPFilter = JobFilterType.NoJob)]
     private static readonly bool _raisePlayerBySwift = true;
 
-    [JobConfig, UI("Prioritize raising dead players over Healing/Defense.",
+    [JobConfig, UI("Hard cast Raise logic",
         Filter = HealingActionCondition, Section = 2)]
-    private static readonly bool _raisePlayerFirst = false;
+    private readonly HardCastRaiseType _HardCastRaiseType = HardCastRaiseType.HardCastNormal;
 
     [JobConfig, UI("Raise styles",
         Filter = HealingActionCondition, Section = 2)]

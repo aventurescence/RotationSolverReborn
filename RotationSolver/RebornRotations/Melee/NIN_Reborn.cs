@@ -1033,6 +1033,10 @@ public sealed class NIN_Reborn : NinjaRotation
                 {
                     return true;
                 }
+                else if (Kazematoi < 4 && ArmorCrushPvE.CanUse(out act))
+                {
+                    return true;
+                }
             }
         }
 

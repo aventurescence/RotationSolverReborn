@@ -63,6 +63,8 @@ public partial class CustomRotation
 
             IBaseAction.TargetOverride = TargetType.Death;
 
+            HardCastRaiseType hardcastraisetype = Service.Config.HardCastRaiseType;
+
             if (Service.Config.RaisePlayerFirst)
             {                
                 if (RaiseSpell(out act, false))
@@ -70,7 +72,7 @@ public partial class CustomRotation
                     return act;
                 }
 
-                if (Service.Config.RaisePlayerByCasting && SwiftcastPvE.Cooldown.IsCoolingDown)
+                if (hardcastraisetype == HardCastRaiseType.HardCastNormal && SwiftcastPvE.Cooldown.IsCoolingDown)
                 {
                     if (RaiseSpell(out act, true))
                     {
@@ -78,7 +80,7 @@ public partial class CustomRotation
                     }
                 }
 
-                if (Service.Config.RaiseSwiftCooldown)
+                if (hardcastraisetype == HardCastRaiseType.HardCastSwiftCooldown)
                 {
                     if (SwiftcastPvE.Cooldown.IsCoolingDown && Raise != null && Raise.Info.CastTime < SwiftcastPvE.Cooldown.RecastTimeRemainOneCharge)
                     {
@@ -89,7 +91,7 @@ public partial class CustomRotation
                     }
                 }
 
-                if (Service.Config.RaiseHealerByCasting)
+                if (hardcastraisetype == HardCastRaiseType.HardCastOnlyHealer)
                 {
                     var deadhealers = new HashSet<IBattleChara>();
                     if (DataCenter.PartyMembers != null)
@@ -117,6 +119,40 @@ public partial class CustomRotation
                     if (RaiseSpell(out act, true) && deadhealers.Count == allhealers.Count && deadhealers.Count > 0)
                     {
                         return act;
+                    }
+                }
+
+                if (hardcastraisetype == HardCastRaiseType.HardCastOnlyHealerSwiftCooldown)
+                {
+                    if (SwiftcastPvE.Cooldown.IsCoolingDown && Raise != null && Raise.Info.CastTime < SwiftcastPvE.Cooldown.RecastTimeRemainOneCharge)
+                    {
+                        var deadhealers = new HashSet<IBattleChara>();
+                        if (DataCenter.PartyMembers != null)
+                        {
+                            foreach (var battleChara in DataCenter.PartyMembers.GetDeath())
+                            {
+                                if (TargetFilter.IsJobCategory(battleChara, JobRole.Healer) && !battleChara.IsPlayer())
+                                {
+                                    deadhealers.Add(battleChara);
+                                }
+                            }
+                        }
+
+                        var allhealers = new HashSet<IBattleChara>();
+                        if (DataCenter.PartyMembers != null)
+                        {
+                            foreach (var battleChara in DataCenter.PartyMembers)
+                            {
+                                if (TargetFilter.IsJobCategory(battleChara, JobRole.Healer) && !battleChara.IsPlayer())
+                                {
+                                    allhealers.Add(battleChara);
+                                }
+                            }
+                        }
+                        if (RaiseSpell(out act, true) && deadhealers.Count == allhealers.Count && deadhealers.Count > 0)
+                        {
+                            return act;
+                        }
                     }
                 }
             }
@@ -245,7 +281,7 @@ public partial class CustomRotation
                     return act;
                 }
 
-                if (Service.Config.RaisePlayerByCasting && SwiftcastPvE.Cooldown.IsCoolingDown)
+                if (hardcastraisetype == HardCastRaiseType.HardCastNormal && SwiftcastPvE.Cooldown.IsCoolingDown)
                 {
                     if (RaiseSpell(out act, true))
                     {
@@ -253,7 +289,7 @@ public partial class CustomRotation
                     }
                 }
 
-                if (Service.Config.RaiseSwiftCooldown)
+                if (hardcastraisetype == HardCastRaiseType.HardCastSwiftCooldown)
                 {
                     if (SwiftcastPvE.Cooldown.IsCoolingDown && Raise != null && Raise.Info.CastTime < SwiftcastPvE.Cooldown.RecastTimeRemainOneCharge)
                     {
@@ -264,7 +300,7 @@ public partial class CustomRotation
                     }
                 }
 
-                if (Service.Config.RaiseHealerByCasting)
+                if (hardcastraisetype == HardCastRaiseType.HardCastOnlyHealer)
                 {
                     var deadhealers = new HashSet<IBattleChara>();
                     if (DataCenter.PartyMembers != null)
@@ -289,9 +325,43 @@ public partial class CustomRotation
                             }
                         }
                     }
-                    if (RaiseSpell(out act, true) && deadhealers.Count == allhealers.Count)
+                    if (RaiseSpell(out act, true) && deadhealers.Count == allhealers.Count && deadhealers.Count > 0)
                     {
                         return act;
+                    }
+                }
+
+                if (hardcastraisetype == HardCastRaiseType.HardCastOnlyHealerSwiftCooldown)
+                {
+                    if (SwiftcastPvE.Cooldown.IsCoolingDown && Raise != null && Raise.Info.CastTime < SwiftcastPvE.Cooldown.RecastTimeRemainOneCharge)
+                    {
+                        var deadhealers = new HashSet<IBattleChara>();
+                        if (DataCenter.PartyMembers != null)
+                        {
+                            foreach (var battleChara in DataCenter.PartyMembers.GetDeath())
+                            {
+                                if (TargetFilter.IsJobCategory(battleChara, JobRole.Healer) && !battleChara.IsPlayer())
+                                {
+                                    deadhealers.Add(battleChara);
+                                }
+                            }
+                        }
+
+                        var allhealers = new HashSet<IBattleChara>();
+                        if (DataCenter.PartyMembers != null)
+                        {
+                            foreach (var battleChara in DataCenter.PartyMembers)
+                            {
+                                if (TargetFilter.IsJobCategory(battleChara, JobRole.Healer) && !battleChara.IsPlayer())
+                                {
+                                    allhealers.Add(battleChara);
+                                }
+                            }
+                        }
+                        if (RaiseSpell(out act, true) && deadhealers.Count == allhealers.Count && deadhealers.Count > 0)
+                        {
+                            return act;
+                        }
                     }
                 }
             }

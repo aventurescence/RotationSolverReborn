@@ -1347,7 +1347,7 @@ public partial class RotationConfigWindow : Window
             new AutoDutyPlugin { Name = "AutoRetainer", Url = "https://love.puni.sh/ment.json" },
             new AutoDutyPlugin { Name = "SkipCutscene", Url = "https://raw.githubusercontent.com/KangasZ/DalamudPluginRepository/main/plugin_repository.json" },
             new AutoDutyPlugin { Name = "AntiAfkKick", Url = "https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json" },
-            new AutoDutyPlugin { Name = "Gearsetter", Url = "https://plugins.carvel.li/" },
+            new AutoDutyPlugin { Name = "Gearsetter", Url = "https://puni.sh/api/repository/vera" },
         ];
 
         // Check if "Boss Mod" and "BossMod Reborn" are enabled
@@ -1474,7 +1474,7 @@ public partial class RotationConfigWindow : Window
         }
 
         _ = ImGui.GetWindowWidth();
-        Type type = rotation.GetType();
+        _ = rotation.GetType();
 
         _rotationHeader.Draw();
     }
@@ -1504,7 +1504,7 @@ public partial class RotationConfigWindow : Window
             return;
         }
 
-        float wholeWidth = ImGui.GetWindowWidth();
+        _ = ImGui.GetWindowWidth();
         Type type = rotation.GetType();
 
         List<RotationDescAttribute?> attrs = [RotationDescAttribute.MergeToOne(type.GetCustomAttributes<RotationDescAttribute>())];
@@ -1595,7 +1595,7 @@ public partial class RotationConfigWindow : Window
                         ImGui.SameLine();
                     }
 
-                    if (item.GetTexture(out Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap? texture))
+                    if (item.GetTexture(out IDalamudTextureWrap? texture))
                     {
                         ImGui.SetCursorPosY(y);
                         Vector2 cursor = ImGui.GetCursorPos();
@@ -2096,11 +2096,53 @@ public partial class RotationConfigWindow : Window
                         _actionsList.AddCollapsingHeader(() => pair.Key, () =>
                         {
                             int index = 0;
-                            List<IAction> sorted = [.. pair];
-                            sorted.Sort((a, b) => a.ID.CompareTo(b.ID));
+
+                            // Build list from the current group
+                            List<IAction> source = [.. pair];
+
+                            // Group by AdjustedID, sort groups by their lowest Level,
+                            // then flatten back while keeping Adjusted IDs contiguous.
+                            var byAdjusted = new Dictionary<uint, List<IAction>>();
+                            for (int i = 0; i < source.Count; i++)
+                            {
+                                IAction a = source[i];
+                                if (!byAdjusted.TryGetValue(a.AdjustedID, out var list))
+                                {
+                                    list = [];
+                                    byAdjusted[a.AdjustedID] = list;
+                                }
+                                list.Add(a);
+                            }
+
+                            var groups = new List<(uint AdjustedID, byte MinLevel, List<IAction> Items)>(byAdjusted.Count);
+                            foreach (var kv in byAdjusted)
+                            {
+                                List<IAction> items = kv.Value;
+                                // Sort items inside a group by Level then by ID for stability
+                                items.Sort((x, y) =>
+                                {
+                                    int cmp = x.Level.CompareTo(y.Level);
+                                    return cmp != 0 ? cmp : x.ID.CompareTo(y.ID);
+                                });
+                                byte minLvl = items.Count > 0 ? items[0].Level : (byte)0;
+                                groups.Add((kv.Key, minLvl, items));
+                            }
+
+                            // Sort groups by the lowest required level, then by AdjustedID
+                            groups.Sort((g1, g2) =>
+                            {
+                                int cmp = g1.MinLevel.CompareTo(g2.MinLevel);
+                                return cmp != 0 ? cmp : g1.AdjustedID.CompareTo(g2.AdjustedID);
+                            });
+
+                            // Flatten into the final sorted list
+                            List<IAction> sorted = new(source.Count);
+                            foreach (var (AdjustedID, MinLevel, Items) in groups)
+                                sorted.AddRange(Items);
+
                             foreach (IAction? item in sorted)
                             {
-                                if (!item.GetTexture(out Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap? icon))
+                                if (!IconSet.GetTexture(item.IconID, out IDalamudTextureWrap? icon))
                                 {
                                     continue;
                                 }
@@ -2118,7 +2160,7 @@ public partial class RotationConfigWindow : Window
                                 }
                                 ImGuiHelper.DrawActionOverlay(cursor, size, _activeAction == item ? 1 : 0);
 
-                                if (IconSet.GetTexture("ui/uld/readycheck_hr1.tex", out Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap? texture))
+                                if (IconSet.GetTexture("ui/uld/readycheck_hr1.tex", out IDalamudTextureWrap? texture))
                                 {
                                     Vector2 offset = new(1 / 12f, 1 / 6f);
                                     ImGui.SetCursorPos(cursor + (new Vector2(0.6f, 0.7f) * size));

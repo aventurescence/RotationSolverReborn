@@ -93,4 +93,9 @@ public class ActionConfig()
     /// Is this action in the cd window.
     /// </summary>
     public bool IsOnCooldownWindow { get; set; } = true;
+
+    /// <summary>
+    /// One-time flag to indicate the AOE-count reset has been applied.
+    /// </summary>
+    public bool AoeResetDone { get; set; } = false;
 }

@@ -161,6 +161,10 @@ public sealed class RPR_Reborn : ReaperRotation
                             return true;
                         if (ExecutionersGibbetPvE.CanUse(out act, skipComboCheck: true) && ExecutionersGibbetPvE.Target.Target != null && CanHitPositional(EnemyPositional.Flank, ExecutionersGibbetPvE.Target.Target))
                             return true;
+                        if (ExecutionersGallowsPvE.CanUse(out act, skipComboCheck: true))
+                            return true;
+                        if (ExecutionersGibbetPvE.CanUse(out act, skipComboCheck: true))
+                            return true;
                         break;
                     case (true, false):
                         if (ExecutionersGallowsPvE.CanUse(out act, skipComboCheck: true))
@@ -315,6 +319,10 @@ public sealed class RPR_Reborn : ReaperRotation
                     if (GallowsPvE.CanUse(out act, skipComboCheck: true) && GallowsPvE.Target.Target != null && CanHitPositional(EnemyPositional.Rear, GallowsPvE.Target.Target))
                         return true;
                     if (GibbetPvE.CanUse(out act, skipComboCheck: true) && GibbetPvE.Target.Target != null && CanHitPositional(EnemyPositional.Flank, GibbetPvE.Target.Target))
+                        return true;
+                    if (GallowsPvE.CanUse(out act, skipComboCheck: true))
+                        return true;
+                    if (GibbetPvE.CanUse(out act, skipComboCheck: true))
                         return true;
                     break;
                 case (true, _):

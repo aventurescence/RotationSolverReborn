@@ -117,6 +117,20 @@ public class BaseAction : IBaseAction
                     value.TimeToKill = 0;
                 }
             }
+
+            // One-time AoE count reset: force AOE Count to rotation default (or global default),
+            // without touching other user-configured fields.
+            if (!value.AoeResetDone)
+            {
+                byte defaultAoe = (Setting.CreateConfig?.Invoke()?.AoeCount) ?? new ActionConfig().AoeCount;
+                value.AoeCount = defaultAoe;
+                value.AoeResetDone = true;
+
+                Service.Config.RotationActionConfig[ID] = value;
+                // Optionally persist immediately:
+                // Service.Config.Save();
+            }
+
             return value;
         }
     }
@@ -204,17 +218,17 @@ public class BaseAction : IBaseAction
     public unsafe bool Use()
     {
         if (Player.Object == null) return false;
-        
+
         TargetResult target = Target;
         uint adjustId = AdjustedID;
-        
+
         if (TargetInfo.IsTargetArea)
         {
             if (adjustId != ID || !target.Position.HasValue)
                 return false;
 
             Vector3 loc = target.Position.Value;
-            
+
             // Use ActionManagerEx for enhanced timing if tweaks are enabled
             if (Service.Config.RemoveAnimationLockDelay || Service.Config.RemoveCooldownDelay)
             {
@@ -223,17 +237,17 @@ public class BaseAction : IBaseAction
             else
             {
                 var actionManager = ActionManager.Instance();
-                return actionManager != null && 
+                return actionManager != null &&
                        actionManager->UseActionLocation(ActionType.Action, ID, Player.Object.GameObjectId, &loc);
             }
         }
         else
         {
             ulong targetId = target.Target?.GameObjectId ?? Player.Object.GameObjectId;
-            
+
             if (targetId == 0 || Svc.Objects.SearchById(targetId) == null)
                 return false;
-            
+
             // Use ActionManagerEx for enhanced timing if tweaks are enabled
             if (Service.Config.RemoveAnimationLockDelay || Service.Config.RemoveCooldownDelay)
             {
@@ -242,7 +256,7 @@ public class BaseAction : IBaseAction
             else
             {
                 var actionManager = ActionManager.Instance();
-                return actionManager != null && 
+                return actionManager != null &&
                        actionManager->UseAction(ActionType.Action, adjustId, targetId);
             }
         }
