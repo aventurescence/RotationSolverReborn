@@ -236,7 +236,7 @@ public partial class BlackMageRotation
 
     static partial void ModifyTransposePvE(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => SoulStackCount > 0;
+
         setting.IsFriendly = true;
     }
 
@@ -295,13 +295,11 @@ public partial class BlackMageRotation
 
     static partial void ModifyFireIiiPvE(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => !IsLastGCD(ActionID.FireIiiPvE);
         setting.MPOverride = () => HasFire ? 0 : null;
     }
 
     static partial void ModifyBlizzardIiiPvE(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => !IsLastGCD(ActionID.BlizzardIvPvE, ActionID.BlizzardIiiPvE);
         setting.UnlockedByQuestID = 66610;
     }
 
@@ -313,7 +311,7 @@ public partial class BlackMageRotation
 
     static partial void ModifyFreezePvE(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => InUmbralIce && UmbralHearts < 3;
+        setting.ActionCheck = () => InUmbralIce;
         setting.UnlockedByQuestID = 66611;
         setting.CreateConfig = () => new ActionConfig()
         {
