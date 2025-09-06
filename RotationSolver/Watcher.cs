@@ -41,7 +41,7 @@ public static class Watcher
 
         if (DalamudReflector.TryGetDalamudStartInfo(out Dalamud.Common.DalamudStartInfo? startinfo, Svc.PluginInterface))
         {
-            if (File.Exists(startinfo.ConfigurationPath))
+            if (!string.IsNullOrEmpty(startinfo?.ConfigurationPath) && File.Exists(startinfo.ConfigurationPath))
             {
                 try
                 {
@@ -78,6 +78,7 @@ public static class Watcher
             float damageRatio = 0;
             ulong playerId = playerObject.GameObjectId;
             uint maxHp = playerObject.MaxHp;
+            uint denom = Math.Max(1u, maxHp); // avoid division by zero
 
             foreach (var effect in set.TargetEffects)
             {
@@ -86,7 +87,7 @@ public static class Watcher
                     effect.ForEach(entry =>
                     {
                         if (entry.type == ActionEffectType.Damage)
-                            damageRatio += (float)entry.value / maxHp;
+                            damageRatio += (float)entry.value / denom;
                     });
                 }
             }
@@ -105,10 +106,11 @@ public static class Watcher
                     if (knock != null)
                     {
                         DataCenter.KnockbackStart = DateTime.Now;
-                        if (knock.HasValue)
+                        if (knock.Value.Speed > 0)
                         {
                             DataCenter.KnockbackFinished = DateTime.Now + TimeSpan.FromSeconds(knock.Value.Distance / (float)knock.Value.Speed);
                         }
+
                         if (set.Action.HasValue && !OtherConfiguration.HostileCastingKnockback.Contains(set.Action.Value.RowId) && Service.Config.RecordKnockbackies)
                         {
                             _ = OtherConfiguration.HostileCastingKnockback.Add(set.Action.Value.RowId);
@@ -202,29 +204,28 @@ public static class Watcher
             ShowStrSelf = set.ToString();
 
             DataCenter.HealHP = set.GetSpecificTypeEffect(ActionEffectType.Heal);
-            DataCenter.ApplyStatus = set.GetSpecificTypeEffect(ActionEffectType.ApplyStatusEffectTarget);
-            Dictionary<ulong, uint> effects = set.GetSpecificTypeEffect(ActionEffectType.ApplyStatusEffectSource);
-            try
+
+            // Ensure ApplyStatus dictionary is non-null, then merge source-applied effects
+            DataCenter.ApplyStatus = set.GetSpecificTypeEffect(ActionEffectType.ApplyStatusEffectTarget) ?? [];
+            var sourceApply = set.GetSpecificTypeEffect(ActionEffectType.ApplyStatusEffectSource);
+            if (sourceApply is { Count: > 0 })
             {
-                if (effects != null)
+                foreach (KeyValuePair<ulong, uint> effect in sourceApply)
                 {
-                    foreach (KeyValuePair<ulong, uint> effect in effects)
-                    {
-                        DataCenter.ApplyStatus[effect.Key] = effect.Value;
-                    }
+                    DataCenter.ApplyStatus[effect.Key] = effect.Value;
                 }
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Error($"Error updating ApplyStatus: {ex}");
             }
 
             uint mpGain = 0;
-            foreach (KeyValuePair<ulong, uint> effect in set.GetSpecificTypeEffect(ActionEffectType.MpGain))
+            var mpEffects = set.GetSpecificTypeEffect(ActionEffectType.MpGain);
+            if (mpEffects != null)
             {
-                if (effect.Key == playerObject.GameObjectId)
+                foreach (KeyValuePair<ulong, uint> effect in mpEffects)
                 {
-                    mpGain += effect.Value;
+                    if (effect.Key == playerObject.GameObjectId)
+                    {
+                        mpGain += effect.Value;
+                    }
                 }
             }
             DataCenter.MPGain = mpGain;
@@ -235,57 +236,80 @@ public static class Watcher
             Queue<(ulong id, DateTime time)> attackedTargets = DataCenter.AttackedTargets;
             int attackedTargetsCount = DataCenter.AttackedTargetsCount;
 
-            foreach (TargetEffect effect in set.TargetEffects)
+            if (attackedTargetsCount > 0)
             {
-                if (!effect.GetSpecificTypeEffect(ActionEffectType.Damage, out _))
+                foreach (TargetEffect effect in set.TargetEffects)
                 {
-                    continue;
-                }
-
-                // Check if the target is already in the attacked targets list
-                bool targetExists = false;
-                foreach ((ulong id, DateTime time) in attackedTargets)
-                {
-                    if (id == effect.TargetID)
+                    if (!effect.GetSpecificTypeEffect(ActionEffectType.Damage, out _))
                     {
-                        targetExists = true;
-                        break;
+                        continue;
                     }
-                }
-                if (targetExists)
-                {
-                    continue;
-                }
 
-                // Ensure the current target is not dequeued
-                while (attackedTargets.Count >= attackedTargetsCount)
-                {
-                    (ulong id, DateTime time) = attackedTargets.Peek();
-                    if (id == effect.TargetID)
+                    // Check if the target is already in the attacked targets list
+                    bool targetExists = false;
+                    foreach ((ulong id, DateTime time) in attackedTargets)
                     {
-                        // If the oldest target is the current target, break the loop to avoid dequeuing it
-                        break;
+                        if (id == effect.TargetID)
+                        {
+                            targetExists = true;
+                            break;
+                        }
                     }
-                    _ = attackedTargets.Dequeue();
-                }
+                    if (targetExists)
+                    {
+                        continue;
+                    }
 
-                // Enqueue the new target
-                attackedTargets.Enqueue((effect.TargetID, DateTime.Now));
+                    // Ensure the current target is not dequeued
+                    while (attackedTargets.Count >= attackedTargetsCount && attackedTargets.Count > 0)
+                    {
+                        (ulong id, DateTime time) = attackedTargets.Peek();
+                        if (id == effect.TargetID)
+                        {
+                            // If the oldest target is the current target, break the loop to avoid dequeuing it
+                            break;
+                        }
+                        _ = attackedTargets.Dequeue();
+                    }
+
+                    // Enqueue the new target
+                    attackedTargets.Enqueue((effect.TargetID, DateTime.Now));
+                }
             }
 
             // Macro
             RegexOptions regexOptions = RegexOptions.Compiled | RegexOptions.IgnoreCase;
-            List<ActionEventInfo> events = Service.Config.Events;
-            foreach (ActionEventInfo item in events)
+            var eventsList = Service.Config.Events ?? [];
+            var actionName = action.Value.Name.ExtractText() ?? string.Empty;
+            if (!string.IsNullOrEmpty(actionName))
             {
-                if (!Regex.IsMatch(action.Value.Name.ExtractText(), item.Name, regexOptions))
+                foreach (ActionEventInfo item in eventsList)
                 {
-                    continue;
-                }
+                    if (string.IsNullOrWhiteSpace(item.Name))
+                    {
+                        continue;
+                    }
 
-                if (item.AddMacro(tar))
-                {
-                    break;
+                    bool isMatch;
+                    try
+                    {
+                        isMatch = Regex.IsMatch(actionName, item.Name, regexOptions);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        PluginLog.Warning($"Invalid regex in ActionEventInfo.Name: \"{item.Name}\". {ex.Message}");
+                        continue;
+                    }
+
+                    if (!isMatch)
+                    {
+                        continue;
+                    }
+
+                    if (item.AddMacro(tar))
+                    {
+                        break;
+                    }
                 }
             }
         }

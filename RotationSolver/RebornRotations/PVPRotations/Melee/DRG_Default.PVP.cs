@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.PVPRotations.Melee;
 
-[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.3")]
+[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/PVPRotations/Melee/DRG_Default.PvP.cs")]
 
 public sealed class DRG_DefaultPvP : DragoonRotation
@@ -48,7 +48,7 @@ public sealed class DRG_DefaultPvP : DragoonRotation
             return true;
         }
 
-        if (SmitePvP.CanUse(out action) && CurrentTarget?.GetHealthRatio() <= SmitePvPPercent)
+        if (SmitePvP.CanUse(out action) && SmitePvP.Target.Target.GetHealthRatio() <= SmitePvPPercent)
         {
             return false;
         }

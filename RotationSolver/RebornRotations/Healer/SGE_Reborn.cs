@@ -1,6 +1,6 @@
 namespace RotationSolver.RebornRotations.Healer;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Healer/SGE_Reborn.cs")]
 
 public sealed class SGE_Reborn : SageRotation

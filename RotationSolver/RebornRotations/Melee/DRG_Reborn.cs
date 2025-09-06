@@ -1,6 +1,6 @@
 namespace RotationSolver.RebornRotations.Melee;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Melee/DRG_Reborn.cs")]
 
 
@@ -103,14 +103,26 @@ public sealed class DRG_Reborn : DragoonRotation
 
         if (IsBurst && InCombat && HasHostilesInRange)
         {
-            bool lifeSurgeReady =
-                ((HasBattleLitany || LOTDEndAfter(1000))
-                    && nextGCD.IsTheSameTo(true, HeavensThrustPvE, DrakesbanePvE))
-                || (HasBattleLitany
-                    && LOTDEndAfter(1000)
-                    && nextGCD.IsTheSameTo(true, ChaoticSpringPvE, LanceBarragePvE, WheelingThrustPvE, FangAndClawPvE))
-                || (nextGCD.IsTheSameTo(true, HeavensThrustPvE, DrakesbanePvE)
-                    && (LanceChargePvE.Cooldown.IsCoolingDown || BattleLitanyPvE.Cooldown.IsCoolingDown));
+            bool lsOnBigHit =
+                nextGCD.IsTheSameTo(true, HeavensThrustPvE, DrakesbanePvE) &&
+                (HasBattleLitany || LOTDEndAfter(1000) ||
+                 LanceChargePvE.Cooldown.IsCoolingDown || BattleLitanyPvE.Cooldown.IsCoolingDown);
+
+            bool lsOnAltFinishersDuringBuff =
+                HasBattleLitany &&
+                LOTDEndAfter(1000) &&
+                nextGCD.IsTheSameTo(true, ChaoticSpringPvE, LanceBarragePvE, WheelingThrustPvE, FangAndClawPvE);
+
+            bool lsLowLevel =
+                (!DisembowelPvE.EnoughLevel && nextGCD.IsTheSameTo(true, VorpalThrustPvE)) ||
+                (!FullThrustPvE.EnoughLevel && nextGCD.IsTheSameTo(true, VorpalThrustPvE, DisembowelPvE)) ||
+                (!LanceChargePvE.EnoughLevel && nextGCD.IsTheSameTo(true, DisembowelPvE, FullThrustPvE)) ||
+                (!BattleLitanyPvE.EnoughLevel && nextGCD.IsTheSameTo(true, FullThrustPvE)) ||
+                (!HeavensThrustPvE.EnoughLevel && !DrakesbanePvE.EnoughLevel &&
+                 HasBattleLitany && HasLanceCharge && LOTDEndAfter(1000) &&
+                 nextGCD.IsTheSameTo(true, ChaoticSpringPvE, LanceBarragePvE, WheelingThrustPvE, FangAndClawPvE));
+
+            bool lifeSurgeReady = lsOnBigHit || lsOnAltFinishersDuringBuff || lsLowLevel;
 
             if ((!BattleLitanyPvE.Cooldown.ElapsedAfter(60) || !BattleLitanyPvE.EnoughLevel)
                 && LanceChargePvE.CanUse(out act))
@@ -123,33 +135,9 @@ public sealed class DRG_Reborn : DragoonRotation
                 return true;
             }
 
-            if (((HasBattleLitany || LOTDEndAfter(1000))
-                && nextGCD.IsTheSameTo(true, HeavensThrustPvE, DrakesbanePvE))
-                || (HasBattleLitany
-                    && HasLanceCharge
-                    && LOTDEndAfter(1000)
-                    && !HeavensThrustPvE.EnoughLevel
-                    && !DrakesbanePvE.EnoughLevel
-                    && nextGCD.IsTheSameTo(true, ChaoticSpringPvE, LanceBarragePvE, WheelingThrustPvE, FangAndClawPvE))
-                || (nextGCD.IsTheSameTo(true, HeavensThrustPvE, DrakesbanePvE)
-                    && (LanceChargePvE.Cooldown.IsCoolingDown || BattleLitanyPvE.Cooldown.IsCoolingDown)))
+            if (lifeSurgeReady && LifeSurgePvE.CanUse(out act, usedUp: true))
             {
-                if (LifeSurgePvE.CanUse(out act, usedUp: true))
-                {
-                    return true;
-                }
-            }
-
-            if (lifeSurgeReady
-                || (!DisembowelPvE.EnoughLevel && nextGCD.IsTheSameTo(true, VorpalThrustPvE))
-                || (!FullThrustPvE.EnoughLevel && nextGCD.IsTheSameTo(true, VorpalThrustPvE, DisembowelPvE))
-                || (!LanceChargePvE.EnoughLevel && nextGCD.IsTheSameTo(true, DisembowelPvE, FullThrustPvE))
-                || (!BattleLitanyPvE.EnoughLevel && nextGCD.IsTheSameTo(true, FullThrustPvE)))
-            {
-                if (LifeSurgePvE.CanUse(out act, usedUp: true))
-                {
-                    return true;
-                }
+                return true;
             }
         }
 

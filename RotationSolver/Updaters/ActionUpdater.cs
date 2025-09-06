@@ -124,6 +124,11 @@ internal static class ActionUpdater
     private static unsafe void UpdateSlots()
     {
         ActionManager* actionManager = ActionManager.Instance();
+        if (actionManager == null)
+        {
+            return;
+        }
+
         for (int i = 0; i < DataCenter.BluSlots.Length; i++)
         {
             DataCenter.BluSlots[i] = actionManager->GetActiveBlueMageActionInSlot(i);
@@ -164,8 +169,16 @@ internal static class ActionUpdater
     private static bool _isDead = true;
     public static void UpdateLifetime(DateTime now)
     {
+        var player = Player.Object;
+        if (player == null)
+        {
+            DataCenter.DeadTimeRaw = 0;
+            DataCenter.AliveTimeRaw = 0;
+            return;
+        }
+
         bool lastDead = _isDead;
-        _isDead = Player.Object.IsDead;
+        _isDead = player.IsDead;
 
         if (Svc.Condition[ConditionFlag.BetweenAreas])
         {
@@ -173,19 +186,19 @@ internal static class ActionUpdater
         }
         switch (lastDead)
         {
-            case true when !Player.Object.IsDead:
+            case true when !_isDead:
                 _startAliveTime = now;
                 break;
-            case false when Player.Object.IsDead:
+            case false when _isDead:
                 _startDeadTime = now;
                 break;
         }
 
-        DataCenter.DeadTimeRaw = Player.Object.IsDead
+        DataCenter.DeadTimeRaw = _isDead
             ? Math.Min(10, (float)(now - _startDeadTime).TotalSeconds)
             : 0;
 
-        DataCenter.AliveTimeRaw = Player.Object.IsDead
+        DataCenter.AliveTimeRaw = _isDead
             ? 0
             : Math.Min(10, (float)(now - _startAliveTime).TotalSeconds);
     }
@@ -197,26 +210,33 @@ internal static class ActionUpdater
 
     private static void UpdateMPTimer(DateTime now)
     {
-        if (Player.Object.ClassJob.RowId != (uint)ECommons.ExcelServices.Job.BLM)
+        var player = Player.Object;
+        if (player == null)
         {
             return;
         }
 
-        if (Player.Object.HasStatus(true, StatusID.LucidDreaming))
+        if (player.ClassJob.RowId != (uint)ECommons.ExcelServices.Job.BLM)
         {
             return;
         }
 
-        if (_lastMP < Player.Object.CurrentMp)
+        if (player.HasStatus(true, StatusID.LucidDreaming))
+        {
+            return;
+        }
+
+        if (_lastMP < player.CurrentMp)
         {
             _lastMPUpdate = now;
         }
-        _lastMP = Player.Object.CurrentMp;
+        _lastMP = player.CurrentMp;
     }
 
     internal static unsafe bool CanDoAction()
     {
-        if (IsPlayerOccupied() || Player.Object.CurrentHp == 0)
+        var player = Player.Object;
+        if (player == null || IsPlayerOccupied() || player.CurrentHp == 0)
         {
             return false;
         }
@@ -232,7 +252,7 @@ internal static class ActionUpdater
         }
 
         // Skip when casting
-        if (Player.Object.TotalCastTime - DataCenter.CalculatedActionAhead > 0)
+        if (player.TotalCastTime - DataCenter.CalculatedActionAhead > 0)
         {
             return false;
         }
@@ -288,8 +308,11 @@ internal static class ActionUpdater
             return true;
         }
 
-        if (ActionManager.Instance()->ActionQueued && NextAction != null
-            && ActionManager.Instance()->QueuedActionId != NextAction.AdjustedID)
+        ActionManager* am = ActionManager.Instance();
+        if (am != null
+            && am->ActionQueued
+            && NextAction != null
+            && am->QueuedActionId != NextAction.AdjustedID)
         {
             return true;
         }

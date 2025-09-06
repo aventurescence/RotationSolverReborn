@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.PVPRotations.Melee;
 
-[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.3")]
+[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/PVPRotations/Melee/RPR_Default.PvP.cs")]
 
 public sealed class RPR_DefaultPvP : ReaperRotation
@@ -45,12 +45,9 @@ public sealed class RPR_DefaultPvP : ReaperRotation
             return true;
         }
 
-        if (SmitePvP.CanUse(out action))
+        if (SmitePvP.CanUse(out action) && SmitePvP.Target.Target.GetHealthRatio() <= SmitePvPPercent)
         {
-            if (CurrentTarget?.GetHealthRatio() <= SmitePvPPercent)
-            {
-                return true;
-            }
+            return false;
         }
 
         return base.EmergencyAbility(nextGCD, out action);

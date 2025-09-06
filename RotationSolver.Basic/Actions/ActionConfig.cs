@@ -60,6 +60,11 @@ public class ActionConfig()
     public byte StatusGcdCount { get; set; } = 2;
 
     /// <summary>
+    /// Is this action a Single Target Healing GCD.
+    /// </summary>
+    public bool GCDSingleHeal { get; set; } = false;
+
+    /// <summary>
     /// The aoe count of this action.
     /// </summary>
     /// <markdown file="Actions" name="Number of targets needed to use this action">

@@ -124,7 +124,17 @@ public static class ObjectHelper
     internal static unsafe bool IsOthersPlayersMob(this IBattleChara battleChara)
     {
         //SpecialType but no NamePlateIcon
-        return _eventType.Contains(battleChara.GetEventType()) && battleChara.GetNamePlateIcon() == 0;
+        bool isEventType = false;
+        var ev = battleChara.GetEventType();
+        for (int i = 0; i < _eventType.Length; i++)
+        {
+            if (_eventType[i] == ev)
+            {
+                isEventType = true;
+                break;
+            }
+        }
+        return isEventType && battleChara.GetNamePlateIcon() == 0;
     }
 
     internal static bool IsAttackable(this IBattleChara battleChara)
@@ -823,7 +833,7 @@ public static class ObjectHelper
     /// </summary>
     public static bool IsOCUndeadTarget(this IBattleChara battleChara)
     {
-        return IsOCUndeadList.Contains(battleChara.NameId);
+        return System.Array.IndexOf(IsOCUndeadList, battleChara.NameId) >= 0;
     }
 
     /// <summary>
@@ -854,7 +864,7 @@ public static class ObjectHelper
     /// </summary>
     public static bool IsOCSlowgaImmuneTarget(this IBattleChara battleChara)
     {
-        return IsOCSlowgaImmuneList.Contains(battleChara.NameId);
+        return System.Array.IndexOf(IsOCSlowgaImmuneList, battleChara.NameId) >= 0;
     }
 
     /// <summary>
@@ -891,7 +901,7 @@ public static class ObjectHelper
     /// </summary>
     public static bool IsOCDoomImmuneTarget(this IBattleChara battleChara)
     {
-        return IsOCDoomImmuneList.Contains(battleChara.NameId);
+        return System.Array.IndexOf(IsOCDoomImmuneList, battleChara.NameId) >= 0;
     }
 
     /// <summary>
@@ -922,7 +932,7 @@ public static class ObjectHelper
     /// </summary>
     public static bool IsOCStunImmuneTarget(this IBattleChara battleChara)
     {
-        return IsOCStunImmuneList.Contains(battleChara.NameId);
+        return System.Array.IndexOf(IsOCStunImmuneList, battleChara.NameId) >= 0;
     }
 
     /// <summary>
@@ -955,7 +965,7 @@ public static class ObjectHelper
     /// </summary>
     public static bool IsOCFreezeImmuneTarget(this IBattleChara battleChara)
     {
-        return IsOCFreezeImmuneList.Contains(battleChara.NameId);
+        return System.Array.IndexOf(IsOCFreezeImmuneList, battleChara.NameId) >= 0;
     }
 
     /// <summary>
@@ -986,7 +996,7 @@ public static class ObjectHelper
     /// </summary>
     public static bool IsOCBlindImmuneTarget(this IBattleChara battleChara)
     {
-        return IsOCBlindImmuneList.Contains(battleChara.NameId);
+        return System.Array.IndexOf(IsOCBlindImmuneList, battleChara.NameId) >= 0;
     }
 
     /// <summary>
@@ -1023,7 +1033,7 @@ public static class ObjectHelper
     /// </summary>
     public static bool IsOCParalysisImmuneTarget(this IBattleChara battleChara)
     {
-        return IsOCParalysisImmuneList.Contains(battleChara.NameId);
+        return System.Array.IndexOf(IsOCParalysisImmuneList, battleChara.NameId) >= 0;
     }
 
     internal static unsafe uint GetNamePlateIcon(this IBattleChara battleChara)

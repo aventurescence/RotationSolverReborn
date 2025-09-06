@@ -1,6 +1,6 @@
 namespace RotationSolver.RebornRotations.Melee;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Melee/NIN_Reborn.cs")]
 
 
@@ -196,7 +196,7 @@ public sealed class NIN_Reborn : NinjaRotation
         // If Ninjutsu is available or not in combat, it exits early, indicating no attack action to perform.
         if (!NoNinjutsu || !InCombat)
         {
-            return false;
+            return base.AttackAbility(nextGCD, out act);
         }
 
         // If the player is within Trick Attack's effective window, and Ten Chi Jin hasn't recently been used,
@@ -337,10 +337,6 @@ public sealed class NIN_Reborn : NinjaRotation
             {
                 SetNinjutsu(RaitonPvE);
             }
-            else
-            {
-                return false;
-            }
         }
         else if (TenPvE.CanUse(out _, usedUp: ShadowWalkerNeeded || InTrickAttack || TenPvE.Cooldown.WillHaveXChargesGCD(2, 2, 0)) && _ninActionAim == null)
         {
@@ -351,12 +347,10 @@ public sealed class NIN_Reborn : NinjaRotation
                 {
                     SetNinjutsu(HutonPvE);
                 }
-                else if (JinPvE.CanUse(out _) && SuitonPvE.IsEnabled)
+                else if (JinPvE.CanUse(out _) && SuitonPvE.IsEnabled && ((TrickAttackPvE.IsEnabled && !KunaisBanePvE.EnoughLevel) || (KunaisBanePvE.IsEnabled && KunaisBanePvE.EnoughLevel)))
                 {
                     SetNinjutsu(SuitonPvE);
                 }
-
-                return false;
             }
 
             //Aoe
@@ -379,16 +373,14 @@ public sealed class NIN_Reborn : NinjaRotation
             //Single
             if (!DeathBlossomPvE.CanUse(out _) && !HakkeMujinsatsuPvE.CanUse(out _) && !ShadowWalkerNeeded)
             {
-                if (RaitonPvE.EnoughLevel && RaitonPvE.IsEnabled && Player.StatusStack(true, StatusID.RaijuReady) < 3)
+                if (RaitonPvE.EnoughLevel && RaitonPvE.IsEnabled && (!Player.HasStatus(true, StatusID.RaijuReady) || (Player.HasStatus(true, StatusID.RaijuReady) && Player.StatusStack(true, StatusID.RaijuReady) < 3)))
                 {
                     SetNinjutsu(RaitonPvE);
-                    return false;
                 }
 
-                if (FumaShurikenPvE.EnoughLevel && FumaShurikenPvE.IsEnabled)
+                if (FumaShurikenPvE.EnoughLevel && FumaShurikenPvE.IsEnabled && (!RaitonPvE.EnoughLevel || (Player.HasStatus(true, StatusID.RaijuReady) && Player.StatusStack(true, StatusID.RaijuReady) == 3)))
                 {
                     SetNinjutsu(FumaShurikenPvE);
-                    return false;
                 }
             }
         }

@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.Melee;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Melee/VPR_Reborn.cs")]
 
 public sealed class VPR_Reborn : ViperRotation
@@ -291,7 +291,7 @@ public sealed class VPR_Reborn : ViperRotation
         }
 
         // Check if player meets Serpents Ire requirements, then check buff timers.
-        if (((SerpentsIrePvE.EnoughLevel && (!SerpentsIrePvE.Cooldown.ElapsedAfter(ReawakenDelayTimer) || SerpentOffering == 100)) || !SerpentsIrePvE.EnoughLevel)
+        if (((PreserveCombo && LiveComboTime > GCDTime(6)) || !PreserveCombo) && ((SerpentsIrePvE.EnoughLevel && (!SerpentsIrePvE.Cooldown.ElapsedAfter(ReawakenDelayTimer) || SerpentOffering == 100)) || !SerpentsIrePvE.EnoughLevel)
             && SwiftTime > SwiftTimer && HuntersTime > HuntersTimer)
         {
             // If all above conditions are met, attempt to use Reawaken.

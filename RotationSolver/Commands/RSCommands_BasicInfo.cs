@@ -18,12 +18,24 @@ namespace RotationSolver.Commands
                 HelpMessage = UiString.Commands_Rotation.GetDescription(),
                 ShowInHelp = true,
             });
+            _ = Svc.Commands.AddHandler(Service.AUTOCOMMAND, new CommandInfo(OnCommand)
+            {
+                HelpMessage = UiString.Commands_Start.GetDescription(),
+                ShowInHelp = true,
+            });
+            _ = Svc.Commands.AddHandler(Service.OFFCOMMAND, new CommandInfo(OnCommand)
+            {
+                HelpMessage = UiString.Commands_Off.GetDescription(),
+                ShowInHelp = true,
+            });
         }
 
         internal static void Disable()
         {
             _ = Svc.Commands.RemoveHandler(Service.COMMAND);
             _ = Svc.Commands.RemoveHandler(Service.ALTCOMMAND);
+            _ = Svc.Commands.RemoveHandler(Service.AUTOCOMMAND);
+            _ = Svc.Commands.RemoveHandler(Service.OFFCOMMAND);
         }
 
         private static void OnCommand(string command, string arguments)

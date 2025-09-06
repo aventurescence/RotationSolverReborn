@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.Ranged;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Ranged/MCH_Reborn.cs")]
 
 public sealed class MCH_Reborn : MachinistRotation
@@ -437,7 +437,12 @@ public sealed class MCH_Reborn : MachinistRotation
         // Opener
         if (Battery == 60 && IsLastGCD(false, ExcavatorPvE) && CombatTime < 15)
         {
-            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true))
+            if (AutomatonQueenPvE.CanUse(out act, skipTTKCheck: true))
+            {
+                return true;
+            }
+
+            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true) && !AutomatonQueenPvE.EnoughLevel)
             {
                 return true;
             }
@@ -446,7 +451,12 @@ public sealed class MCH_Reborn : MachinistRotation
         // Only allow battery usage if the current transition matches the expected step
         if (foundStepPair)
         {
-            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true))
+            if (AutomatonQueenPvE.CanUse(out act, skipTTKCheck: true))
+            {
+                return true;
+            }
+
+            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true) && !AutomatonQueenPvE.EnoughLevel)
             {
                 return true;
             }
@@ -456,7 +466,12 @@ public sealed class MCH_Reborn : MachinistRotation
         if ((nextGCD.IsTheSameTo(false, CleanShotPvE, HeatedCleanShotPvE) && Battery > 90)
             || (nextGCD.IsTheSameTo(false, HotShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery > 80))
         {
-            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true))
+            if (AutomatonQueenPvE.CanUse(out act, skipTTKCheck: true))
+            {
+                return true;
+            }
+
+            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true) && !AutomatonQueenPvE.EnoughLevel)
             {
                 return true;
             }

@@ -68,32 +68,43 @@ namespace RotationSolver.Updaters
                 {
                     if (actionType == 1 && (useType != 2 || Service.Config.InterceptMacro)) // ActionType.Action == 1
                     {
-                        if (ShouldInterceptAction(actionID))
+                        // Always compute adjusted ID first to keep logic consistent
+                        uint adjustedActionId = Service.GetAdjustedActionId(actionID);
+
+                        if (ShouldInterceptAction(adjustedActionId))
                         {
                             // More efficient action lookup - avoid creating new collections
                             var rotationActions = RotationUpdater.CurrentRotationActions ?? [];
                             var dutyActions = DataCenter.CurrentDutyRotation?.AllActions ?? [];
 
-                            // Find matching action by ID without creating intermediate collections
-                            uint adjustedActionId = Service.GetAdjustedActionId(actionID);
-
-                            PluginLog.Debug($"[ActionQueueManager] Detected player input: (ID: {actionID})");
+                            PluginLog.Debug($"[ActionQueueManager] Detected player input: ID={actionID}, AdjustedID={adjustedActionId}");
 
                             var matchingAction = ((ActionID)adjustedActionId).GetActionFromID(false, rotationActions, dutyActions);
 
                             if (matchingAction != null)
                             {
-                                PluginLog.Debug($"[ActionQueueManager] Matching action decided: (ID: {matchingAction})");
-                                
+                                PluginLog.Debug($"[ActionQueueManager] Matching action decided: {matchingAction.Name} (ID: {matchingAction.ID}, AdjustedID: {matchingAction.AdjustedID})");
+
                                 if (matchingAction.IsIntercepted)
                                 {
-                                    if (matchingAction.EnoughLevel && CanInterceptAction(matchingAction))
+                                    if (!matchingAction.EnoughLevel)
+                                    {
+                                        PluginLog.Debug($"[ActionQueueManager] Not intercepting: insufficient level for {matchingAction.Name}.");
+                                    }
+                                    else if (!CanInterceptAction(matchingAction))
+                                    {
+                                        PluginLog.Debug($"[ActionQueueManager] Not intercepting: cooldown/window check failed for {matchingAction.Name}.");
+                                    }
+                                    else
                                     {
                                         HandleInterceptedAction(matchingAction, actionID);
                                         return false; // Block the original action
                                     }
                                 }
-                                PluginLog.Debug($"[ActionQueueManager] Matching action disabled for intercepting: (ID: {matchingAction})");
+                                else
+                                {
+                                    PluginLog.Debug($"[ActionQueueManager] Not intercepting: {matchingAction.Name} is not marked for interception.");
+                                }
                             }
                         }
                     }
@@ -116,16 +127,15 @@ namespace RotationSolver.Updaters
 
         private static bool ShouldInterceptAction(uint actionId)
         {
+            // Note: actionId is expected to be the adjusted ID
             if (ActionUpdater.NextAction != null && actionId == ActionUpdater.NextAction.AdjustedID)
                 return false;
 
-            // Don't intercept auto-attacks
             var actionSheet = Svc.Data.GetExcelSheet<Lumina.Excel.Sheets.Action>();
-            var action = actionSheet?.GetRow(actionId);
-            var type = action?.ActionCategory.Value.RowId;
+            if (actionSheet == null) return false;
 
-            // Handle null case
-            if (type == null) return false;
+            var action = actionSheet.GetRow(actionId);
+            var type = action.ActionCategory.Value.RowId;
 
             if (type == 0) // ActionCate.None
             {
@@ -159,12 +169,17 @@ namespace RotationSolver.Updaters
         {
             if (Service.Config.InterceptCooldown || action.Cooldown.CurrentCharges > 0) return true;
 
+            // Guard against invalid GCD totals to avoid division by zero
+            var gcdTotal = DataCenter.DefaultGCDTotal;
+            if (gcdTotal <= 0)
+                return false;
+
             // We check if the skill will fit inside the intercept action time window
-            var gcdCount = (byte)Math.Floor(Service.Config.InterceptActionTime / DataCenter.DefaultGCDTotal);
+            var gcdCount = (byte)Math.Floor(Service.Config.InterceptActionTime / gcdTotal);
+            if (gcdCount < 1) gcdCount = 1;
 
-            return action is IBaseAction baseAction && baseAction.Cooldown.CooldownCheck(false, (byte)(gcdCount < 1 ? 1 : gcdCount));
+            return action is IBaseAction baseAction && baseAction.Cooldown.CooldownCheck(false, gcdCount);
         }
-
 
         private static void HandleInterceptedAction(IAction matchingAction, uint actionID)
         {
@@ -174,7 +189,7 @@ namespace RotationSolver.Updaters
                 // This avoids the string parsing overhead and potential format issues
                 DataCenter.AddCommandAction(matchingAction, Service.Config.InterceptActionTime);
 
-                PluginLog.Debug($"[ActionQueueManager] Intercepted and queued action: {matchingAction.Name} (ID: {actionID})");
+                PluginLog.Debug($"[ActionQueueManager] Intercepted and queued action: {matchingAction.Name} (OriginalID: {actionID}, AdjustedID: {matchingAction.AdjustedID})");
             }
             catch (Exception ex)
             {

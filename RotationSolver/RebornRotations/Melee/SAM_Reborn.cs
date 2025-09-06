@@ -2,7 +2,7 @@
 
 namespace RotationSolver.RebornRotations.Melee;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Melee/SAM_Reborn.cs")]
 
 public sealed class SAM_Reborn : SamuraiRotation
