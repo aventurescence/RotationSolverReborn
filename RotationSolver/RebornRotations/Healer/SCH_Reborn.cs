@@ -165,7 +165,8 @@ public sealed class SCH_Reborn : ScholarRotation
             {
                 if (DeploymentTacticsPvE.CanUse(out act))
                 {
-                    if (DeploymentTacticsPvE.Target.Target.IsParty() && DeploymentTacticsPvE.Target.Target.HasStatus(true, StatusID.Catalyze))
+                    IBattleChara t = DeploymentTacticsPvE.Target.Target;
+                    if (t.IsParty() && (t.HasStatus(true, StatusID.Catalyze) || t.HasStatus(true, StatusID.Galvanize)))
                     {
                         return true;
                     }

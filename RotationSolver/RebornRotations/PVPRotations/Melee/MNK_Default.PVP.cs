@@ -73,7 +73,7 @@ public sealed class MNK_DefaultPvP : MonkRotation
             return base.AttackAbility(nextGCD, out action);
         }
 
-        if (NumberOfHostilesInRangeOf(6) > 0 && RisingPhoenixPvP.CanUse(out action, usedUp: true) && HasHostilesInRange)
+        if (NumberOfHostilesInRangeOf(6) > 0 && RisingPhoenixPvP.CanUse(out action, usedUp: true) && InCombat)
         {
             return true;
         }
