@@ -304,7 +304,11 @@ internal static partial class TargetUpdater
 
             // Apply dispel delay
             _dispelPartyTargets.Delay(weakenPeople);
-            var delayedWeakenPeople = _dispelPartyTargets.ToList();
+            var delayedWeakenPeople = new List<IBattleChara>();
+            foreach (var person in _dispelPartyTargets)
+            {
+                delayedWeakenPeople.Add(person);
+            }
 
             var CanDispelNonDangerous = !DataCenter.MergedStatus.HasFlag(AutoStatus.HealAreaAbility)
                     && !DataCenter.MergedStatus.HasFlag(AutoStatus.HealAreaSpell)

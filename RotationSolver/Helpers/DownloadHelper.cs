@@ -5,6 +5,20 @@ namespace RotationSolver.Helpers;
 
 public static class DownloadHelper
 {
+    private static readonly HttpClient Http = CreateHttpClient();
+
+    private static HttpClient CreateHttpClient()
+    {
+        var client = new HttpClient();
+        try
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("RotationSolver");
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        }
+        catch { /* headers are best-effort */ }
+        return client;
+    }
+
     public static IncompatiblePlugin[] IncompatiblePlugins { get; private set; } = [];
 
     public static async Task DownloadAsync()
@@ -14,10 +28,9 @@ public static class DownloadHelper
 
     private static async Task<T?> DownloadOneAsync<T>(string url)
     {
-        using HttpClient client = new();
         try
         {
-            string str = await client.GetStringAsync(url);
+            string str = await Http.GetStringAsync(url);
             return JsonConvert.DeserializeObject<T>(str);
         }
         catch (Exception ex)

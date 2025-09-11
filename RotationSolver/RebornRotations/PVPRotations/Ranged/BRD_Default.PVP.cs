@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.PVPRotations.Ranged;
 
-[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.3")]
+[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/PVPRotations/Ranged/BRD_Default.PvP.cs")]
 
 public sealed class BRD_DefaultPvP : BardRotation
@@ -106,7 +106,7 @@ public sealed class BRD_DefaultPvP : BardRotation
             return base.GeneralGCD(out action);
         }
 
-        if (HarmonicArrowPvP_41964.CanUse(out action))
+        if (HarmonicArrowPvP.CanUse(out action))
         {
             return true;
         }

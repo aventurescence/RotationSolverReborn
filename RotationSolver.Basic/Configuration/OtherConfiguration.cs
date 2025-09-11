@@ -2,11 +2,24 @@
 using ECommons.ExcelServices;
 using ECommons.Logging;
 using Newtonsoft.Json.Converters;
+using System.Net.Http;
 
 namespace RotationSolver.Basic.Configuration;
 
 internal class OtherConfiguration
 {
+    private static readonly HttpClient Http = CreateHttpClient();
+    private static HttpClient CreateHttpClient()
+    {
+        var c = new HttpClient();
+        try
+        {
+            c.DefaultRequestHeaders.UserAgent.ParseAdd("RotationSolver");
+            c.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        }
+        catch { /* best-effort headers */ }
+        return c;
+    }
     /// <markdown file="List" name="AoE" section="Actions">
     /// **`It is recommended to click on the reset button after every patch.`**
     /// 
@@ -364,8 +377,8 @@ internal class OtherConfiguration
         {
             try
             {
-                using HttpClient client = new();
-                string str = client.GetStringAsync($"https://raw.githubusercontent.com/{Service.USERNAME}/{Service.REPO}/main/Resources/{name}.json").Result;
+                string url = $"https://raw.githubusercontent.com/{Service.USERNAME}/{Service.REPO}/main/Resources/{name}.json";
+                string str = Http.GetStringAsync(url).Result;
 
                 File.WriteAllText(path, str);
                 value = JsonConvert.DeserializeObject<T>(str, new JsonSerializerSettings

@@ -91,6 +91,20 @@ public sealed class RotationSolverPlugin : IDalamudPlugin, IDisposable
         _changelogWindow = new();
         _overlayWindow = new();
 
+        // Start cactbot bridge if enabled
+        try
+        {
+            if (Service.Config.EnableCactbotTimeline)
+            {
+                var cactbotBridge = new Helpers.CactbotTimelineBridge();
+                _dis.Add(cactbotBridge);
+            }
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Warning($"Failed to start CactbotTimelineBridge: {ex.Message}");
+        }
+
         windowSystem = new WindowSystem(Name);
         windowSystem.AddWindow(_rotationConfigWindow);
         windowSystem.AddWindow(_controlWindow);

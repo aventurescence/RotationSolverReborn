@@ -527,7 +527,17 @@ internal static class RotationUpdater
     {
         foreach (CustomRotationGroup customRotationGroup in CustomRotations)
         {
-            if (!customRotationGroup.ClassJobIds.Contains(currentJob))
+            bool classMatch = false;
+            var classJobs = customRotationGroup.ClassJobIds;
+            for (int i = 0; i < classJobs.Length; i++)
+            {
+                if (classJobs[i] == currentJob)
+                {
+                    classMatch = true;
+                    break;
+                }
+            }
+            if (!classMatch)
             {
                 continue;
             }

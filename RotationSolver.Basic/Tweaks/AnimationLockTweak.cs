@@ -76,7 +76,7 @@ public sealed unsafe class AnimationLockTweak
         if (_lastReqSequence == sequence && _lastReqInitialAnimLock > 0)
         {
             SanityCheck(packetPrevAnimLock, packetCurrAnimLock, gameCurrAnimLock);
-            DelayAverage = delay * (1 - DelaySmoothing) + DelayAverage * DelaySmoothing; // Update the exponential average
+            DelayAverage = Math.Clamp(delay * (1 - DelaySmoothing) + DelayAverage * DelaySmoothing, 0f, 0.5f); // Update the exponential average with bounds
             
             // The result will be subtracted from current animation lock (and thus from adjusted lock delay)
             reduction = Service.Config.RemoveAnimationLockDelay ? Math.Clamp(delay - DelayMax, 0, gameCurrAnimLock) : 0;

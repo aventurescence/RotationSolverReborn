@@ -2,12 +2,15 @@ using System.ComponentModel;
 
 namespace RotationSolver.RebornRotations.Healer;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Healer/AST_Reborn.cs")]
 
 public sealed class AST_Reborn : AstrologianRotation
 {
     #region Config Options
+    [RotationConfig(CombatType.PvE, Name = "Limit Macrocosmos to multihit party stacks")]
+    public bool MultiHitRestrict { get; set; } = false;
+
     [RotationConfig(CombatType.PvE, Name = "Enable Swiftcast Restriction Logic to attempt to prevent actions other than Raise when you have swiftcast")]
     public bool SwiftLogic { get; set; } = true;
 
@@ -458,7 +461,6 @@ public sealed class AST_Reborn : AstrologianRotation
     #endregion
 
     #region GCD Logic
-    [RotationDesc(ActionID.MacrocosmosPvE)]
     protected override bool DefenseSingleGCD(out IAction? act)
     {
         if (BubbleProtec && HasCollectiveUnconscious)
@@ -499,9 +501,12 @@ public sealed class AST_Reborn : AstrologianRotation
             return true;
         }
 
-        if (MacrocosmosPvE.CanUse(out act))
+        if ((MultiHitRestrict && IsCastingMultiHit) || !MultiHitRestrict)
         {
-            return true;
+            if (MacrocosmosPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
 
         return base.DefenseAreaGCD(out act);

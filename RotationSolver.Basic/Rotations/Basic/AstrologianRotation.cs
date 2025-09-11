@@ -135,6 +135,10 @@ public partial class AstrologianRotation
     static partial void ModifyBeneficPvE(ref ActionSetting setting)
     {
         setting.IsFriendly = true;
+        setting.CreateConfig = () => new ActionConfig()
+        {
+            GCDSingleHeal = true,
+        };
     }
 
     static partial void ModifyCombustPvE(ref ActionSetting setting)
@@ -175,6 +179,10 @@ public partial class AstrologianRotation
     static partial void ModifyBeneficIiPvE(ref ActionSetting setting)
     {
         setting.IsFriendly = true;
+        setting.CreateConfig = () => new ActionConfig()
+        {
+            GCDSingleHeal = true,
+        };
     }
 
     static partial void ModifyAstralDrawPvE(ref ActionSetting setting)
@@ -255,6 +263,10 @@ public partial class AstrologianRotation
     static partial void ModifyAspectedBeneficPvE(ref ActionSetting setting)
     {
         setting.TargetStatusProvide = [StatusID.AspectedBenefic];
+        setting.CreateConfig = () => new ActionConfig()
+        {
+            GCDSingleHeal = true,
+        };
         setting.IsFriendly = true;
     }
 

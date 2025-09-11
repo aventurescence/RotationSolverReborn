@@ -314,6 +314,13 @@ public readonly struct ActionBasicInfo
 
         if (Player.Job == Job.WHM)
         {
+            // Freecure makes the next Cure II cost 0 MP
+            if (ID == (uint)ActionID.CureIiPvE && Player.Object.HasStatus(true, StatusID.Freecure))
+            {
+                return true;
+            }
+
+            // Thin Air covers any expensive spell (including Raise)
             if (Player.Object.HasStatus(true, StatusID.ThinAir) || CustomRotation.IsLastAction(ActionID.ThinAirPvE))
             {
                 return true;

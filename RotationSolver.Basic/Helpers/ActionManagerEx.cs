@@ -96,18 +96,23 @@ public sealed unsafe class ActionManagerEx : IDisposable
             _cooldownTweak.StartAdjustment(prevAnimLock, prevCooldown, deltaTime);
         }
         
-        // Record the request for animation lock tweak
+        // Determine the expected sequence for the upcoming action
         var expectedSequence = _actionManager->LastUsedActionSequence + 1;
-        if (Service.Config.RemoveAnimationLockDelay && prevAnimLock > 0)
-        {
-            _animLockTweak.RecordRequest((uint)expectedSequence, prevAnimLock);
-        }
         
         // Execute the action
         var result = _actionManager->UseAction(actionType, actionId, targetId);
         
         if (result)
         {
+            // Record the initial animation lock bump after a successful use
+            if (Service.Config.RemoveAnimationLockDelay)
+            {
+                var initAnimLock = _actionManager->AnimationLock;
+                if (initAnimLock > prevAnimLock)
+                {
+                    _animLockTweak.RecordRequest((uint)expectedSequence, initAnimLock);
+                }
+            }
             // Apply tweaks after successful action use
             ApplyPostActionTweaks((uint)expectedSequence, prevAnimLock, prevCooldown);
         }
@@ -144,18 +149,23 @@ public sealed unsafe class ActionManagerEx : IDisposable
             _cooldownTweak.StartAdjustment(prevAnimLock, prevCooldown, deltaTime);
         }
         
-        // Record the request for animation lock tweak
+        // Determine the expected sequence for the upcoming action
         var expectedSequence = _actionManager->LastUsedActionSequence + 1;
-        if (Service.Config.RemoveAnimationLockDelay && prevAnimLock > 0)
-        {
-            _animLockTweak.RecordRequest((uint)expectedSequence, prevAnimLock);
-        }
         
         // Execute the action
         var result = _actionManager->UseActionLocation(actionType, actionId, targetId, location);
         
         if (result)
         {
+            // Record the initial animation lock bump after a successful use
+            if (Service.Config.RemoveAnimationLockDelay)
+            {
+                var initAnimLock = _actionManager->AnimationLock;
+                if (initAnimLock > prevAnimLock)
+                {
+                    _animLockTweak.RecordRequest((uint)expectedSequence, initAnimLock);
+                }
+            }
             // Apply tweaks after successful action use
             ApplyPostActionTweaks((uint)expectedSequence, prevAnimLock, prevCooldown);
         }

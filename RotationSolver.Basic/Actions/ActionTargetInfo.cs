@@ -1642,6 +1642,8 @@ public struct ActionTargetInfo(IBaseAction action)
             IBattleChara? bestGalvanize = null;
             uint bestGalvanizeShield = 0;
 
+            const float spreadRadius = 10f; // Deployment Tactics spreads within 10y of the target
+
             foreach (IBattleChara battleChara in DataCenter.PartyMembers)
             {
                 if (battleChara == null || battleChara.IsDead)
@@ -1650,6 +1652,31 @@ public struct ActionTargetInfo(IBaseAction action)
                 }
 
                 uint shield = ObjectHelper.GetObjectShield(battleChara);
+                if (shield == 0)
+                {
+                    // No effective shield to spread
+                    continue;
+                }
+
+                // Require at least one other party member in spread radius
+                int neighbors = 0;
+                foreach (IBattleChara member in DataCenter.PartyMembers)
+                {
+                    if (member == null || member.IsDead || member.GameObjectId == battleChara.GameObjectId)
+                    {
+                        continue;
+                    }
+                    if (Vector3.Distance(member.Position, battleChara.Position) <= spreadRadius)
+                    {
+                        neighbors++;
+                        if (neighbors >= 1) break;
+                    }
+                }
+                if (neighbors == 0)
+                {
+                    // Nothing to spread to
+                    continue;
+                }
 
                 if (!battleChara.WillStatusEnd(20, true, StatusID.Catalyze))
                 {
@@ -1671,13 +1698,13 @@ public struct ActionTargetInfo(IBaseAction action)
 
             if (bestCatalyze != null)
             {
-                PluginLog.Debug($"FindDeploymentTacticsTarget: {bestCatalyze.Name} is a valid target with Catalyze and largest shield.");
+                PluginLog.Debug($"FindDeploymentTacticsTarget: {bestCatalyze.Name} is a valid target with Catalyze, largest shield, and nearby allies.");
                 return bestCatalyze;
             }
 
             if (bestGalvanize != null)
             {
-                PluginLog.Debug($"FindDeploymentTacticsTarget: {bestGalvanize.Name} is a valid target with Galvanize and largest shield.");
+                PluginLog.Debug($"FindDeploymentTacticsTarget: {bestGalvanize.Name} is a valid target with Galvanize, largest shield, and nearby allies.");
                 return bestGalvanize;
             }
 

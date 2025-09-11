@@ -1,6 +1,6 @@
 namespace RotationSolver.RebornRotations.Healer;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Healer/SGE_Reborn.cs")]
 
 public sealed class SGE_Reborn : SageRotation
@@ -17,6 +17,9 @@ public sealed class SGE_Reborn : SageRotation
 
     [RotationConfig(CombatType.PvE, Name = "Use Rhizomata when out of combat")]
     public bool OOCRhizomata { get; set; } = false;
+
+    [RotationConfig(CombatType.PvE, Name = "Limit Panhaima to multihit party stacks")]
+    public bool MultiHitRestrict { get; set; } = false;
 
     [RotationConfig(CombatType.PvE, Name = "Use GCDs to heal. (Ignored if you are the only healer in party)")]
     public bool GCDHeal { get; set; } = false;
@@ -174,9 +177,12 @@ public sealed class SGE_Reborn : SageRotation
 
         if (Addersgall <= 1)
         {
-            if (PanhaimaPvE.CanUse(out act))
+            if ((MultiHitRestrict && IsCastingMultiHit) || !MultiHitRestrict)
             {
-                return true;
+                if (PanhaimaPvE.CanUse(out act))
+                {
+                    return true;
+                }
             }
         }
 

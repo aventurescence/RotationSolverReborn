@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.PVPRotations.Ranged;
 
-[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.3")]
+[Rotation("Default PVP", CombatType.PvP, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/PVPRotations/Ranged/DNC_Default.PvP.cs")]
 
 public sealed class DNC_DefaultPvP : DancerRotation
@@ -15,6 +15,11 @@ public sealed class DNC_DefaultPvP : DancerRotation
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? action)
     {
         if (RespectGuard && Player.HasStatus(true, StatusID.Guard))
+        {
+            return base.EmergencyAbility(nextGCD, out action);
+        }
+
+        if (Player.HasStatus(true, StatusID.HoningDance))
         {
             return base.EmergencyAbility(nextGCD, out action);
         }
@@ -59,6 +64,11 @@ public sealed class DNC_DefaultPvP : DancerRotation
             return base.HealAreaAbility(nextGCD, out action);
         }
 
+        if (Player.HasStatus(true, StatusID.HoningDance))
+        {
+            return base.HealAreaAbility(nextGCD, out action);
+        }
+
         if (CuringWaltzPvP.CanUse(out action))
         {
             return true;
@@ -86,6 +96,11 @@ public sealed class DNC_DefaultPvP : DancerRotation
             return base.AttackAbility(nextGCD, out action);
         }
 
+        if (Player.HasStatus(true, StatusID.HoningDance))
+        {
+            return base.AttackAbility(nextGCD, out action);
+        }
+
         if (FanDancePvP.CanUse(out action))
         {
             return true;
@@ -108,6 +123,11 @@ public sealed class DNC_DefaultPvP : DancerRotation
             return base.GeneralGCD(out action);
         }
 
+        if (Player.HasStatus(true, StatusID.HoningDance))
+        {
+            return base.GeneralGCD(out action);
+        }
+
         if (DanceOfTheDawnPvP.CanUse(out action))
         {
             return true;
@@ -118,7 +138,7 @@ public sealed class DNC_DefaultPvP : DancerRotation
             return true;
         }
 
-        if (HoningDancePvP.CanUse(out action) && !Player.HasStatus(true, StatusID.EnAvant))
+        if (NumberOfHostilesInRangeOf(6) > 0 && HoningDancePvP.CanUse(out action) && !Player.HasStatus(true, StatusID.EnAvant))
         {
             return true;
         }

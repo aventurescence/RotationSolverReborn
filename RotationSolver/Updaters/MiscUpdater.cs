@@ -134,21 +134,25 @@ internal static class MiscUpdater
 
     private static unsafe void UpdateCancelCast()
     {
-        if (!Player.Object.IsCasting)
+        if (Player.Object == null || !Player.Object.IsCasting)
         {
             return;
         }
 
+        if (!DataCenter.State)
+        {
+            return;
+        }
+
+        IBattleChara? castTarget = Svc.Objects.SearchById(Player.Object.CastTargetObjectId) as IBattleChara;
+
         bool tarDead = Service.Config.UseStopCasting
-            && Svc.Objects.SearchById(Player.Object.CastTargetObjectId) is IBattleChara b
-            && b.IsEnemy() && b.CurrentHp == 0;
+            && castTarget != null
+            && castTarget.IsEnemy()
+            && castTarget.CurrentHp == 0;
 
         // Cancel raise cast if target already has Raise status
-        bool tarHasRaise = false;
-        if (Svc.Objects.SearchById(Player.Object.CastTargetObjectId) is IBattleChara battleChara)
-        {
-            tarHasRaise = battleChara.HasStatus(false, StatusID.Raise);
-        }
+        bool tarHasRaise = castTarget != null && castTarget.HasStatus(false, StatusID.Raise);
 
         float[] statusTimes = GetStatusTimes();
 
@@ -161,14 +165,22 @@ internal static class MiscUpdater
             }
         }
 
-        bool stopDueStatus = statusTimes.Length > 0 && minStatusTime > Player.Object.TotalCastTime - Player.Object.CurrentCastTime && minStatusTime < 5;
-        
-        bool shouldStopHealing = Service.Config.StopHealingAfterThresholdExperimental && DataCenter.InCombat &&
-                                 !CustomRotation.HealingWhileDoingNothing &&
-                                 DataCenter.CommandNextAction?.AdjustedID != Player.Object.CastActionId &&
-                                 ((ActionID)Player.Object.CastActionId).GetActionFromID(true, RotationUpdater.CurrentRotationActions) is IBaseAction {Setting.IsFriendly: true} && 
-                                 (DataCenter.MergedStatus & (AutoStatus.HealAreaSpell | AutoStatus.HealSingleSpell)) == 0;
-        
+        float remainingCast = MathF.Max(0, Player.Object.TotalCastTime - Player.Object.CurrentCastTime);
+
+        // Cancel if a "no-casting" status will expire before the cast completes and it's soon (<5s)
+        bool stopDueStatus = statusTimes.Length > 0
+            && minStatusTime <= remainingCast
+            && minStatusTime < 5;
+
+        bool shouldStopHealing =
+            Service.Config.StopHealingAfterThresholdExperimental2
+            && DataCenter.InCombat
+            && !CustomRotation.HealingWhileDoingNothing
+            && DataCenter.CommandNextAction?.AdjustedID != Player.Object.CastActionId
+            && ((ActionID)Player.Object.CastActionId).GetActionFromID(true, RotationUpdater.CurrentRotationActions)
+                is IBaseAction { Setting.GCDSingleHeal: true }
+            && (DataCenter.MergedStatus & (AutoStatus.HealAreaSpell | AutoStatus.HealSingleSpell)) == 0;
+
         if (_tarStopCastDelay.Delay(tarDead) || stopDueStatus || tarHasRaise || shouldStopHealing)
         {
             UIState* uiState = UIState.Instance();

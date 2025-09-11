@@ -604,6 +604,12 @@ namespace RotationSolver.Data
         [Description("Open config window")]
         Commands_Rotation,
 
+        [Description("Start RSR combat rotation state")]
+        Commands_Start,
+
+        [Description("Disable RSR combat rotation state")]
+        Commands_Off,
+
         [Description("Rotation Solver Reborn Settings v")]
         ConfigWindowHeader,
 

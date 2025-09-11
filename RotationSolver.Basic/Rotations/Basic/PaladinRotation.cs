@@ -271,6 +271,10 @@ public partial class PaladinRotation
             return !t.HasStatus(false, StatusHelper.TankStanceStatus);
         };
         setting.IsFriendly = true;
+        setting.CreateConfig = () => new ActionConfig()
+        {
+            GCDSingleHeal = true,
+        };
     }
 
     static partial void ModifyRoyalAuthorityPvE(ref ActionSetting setting)

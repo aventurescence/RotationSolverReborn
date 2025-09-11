@@ -237,6 +237,7 @@ public partial class CustomRotation
 
     static partial void ModifyBloodbathPvP(ref ActionSetting setting)
     {
+        setting.ActionCheck = () => Player.TimeAlive() > 5;
         setting.StatusNeed = [StatusID.PvPRoleActionBloodbath];
     }
 

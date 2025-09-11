@@ -2306,6 +2306,7 @@ public partial class RotationConfigWindow : Window
                     ImGui.Text("Can Use: " + action.CanUse(out _));
                     ImGui.Spacing();
                     ImGui.Text("ID: " + action.Info.ID);
+                    ImGui.Text("GCDSingleHeal: " + action.Config.GCDSingleHeal);
                     ImGui.Text("AdjustedID: " + Service.GetAdjustedActionId(action.Info.ID));
                     ImGui.Text($"IsQuestUnlocked: {action.Info.IsQuestUnlocked()} ({action.Action.UnlockLink.RowId})");
                     ImGui.Text("EnoughLevel: " + action.EnoughLevel);
@@ -3443,6 +3444,7 @@ public partial class RotationConfigWindow : Window
     private static unsafe void DrawDutyInfo()
     {
         ImGui.Spacing();
+        ImGui.Text($"DC State: {DataCenter.State}");
         ImGui.Text($"Your combat state: {DataCenter.InCombat}");
         ImGui.Text($"Combat Time: {DataCenter.CombatTimeRaw}");
         ImGui.Text($"TerritoryID: {DataCenter.TerritoryID}");
@@ -3482,6 +3484,7 @@ public partial class RotationConfigWindow : Window
         ImGui.Text($"MountRokkon: {DataCenter.MountRokkon}");
         ImGui.Text($"SildihnSubterrane: {DataCenter.SildihnSubterrane}");
         ImGui.Spacing();
+        ImGui.Text($"IsCastingMultiHit: {DataCenter.IsCastingMultiHit()}");
     }
 
     private static unsafe void DrawParty()
@@ -3538,6 +3541,12 @@ public partial class RotationConfigWindow : Window
                 ImGui.Text($"{i + 1}: {jobName}");
             }
         }
+        ImGui.Spacing();
+        float mitigationFraction = CustomRotation.GetCurrentMitigationPercent(); // 0.0–0.95
+        ImGui.Text($"Current Mitigation Percent: {mitigationFraction * 100f:F1}%");
+        ImGui.Text($"Current Mitigation Percent RAW: {mitigationFraction}");
+
+        ImGui.Text($"Is Magical Damage Incoming: {CustomRotation.IsMagicalDamageIncoming()}");
     }
 
     private static unsafe void DrawTargetData()

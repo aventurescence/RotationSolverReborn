@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.Ranged;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Ranged/MCH_Reborn.cs")]
 
 public sealed class MCH_Reborn : MachinistRotation
@@ -215,6 +215,22 @@ public sealed class MCH_Reborn : MachinistRotation
     #region GCD Logic
     protected override bool GeneralGCD(out IAction? act)
     {
+        if (Player.WillStatusEndGCD(1, 0, true, StatusID.FullMetalMachinist))
+        {
+            if (FullMetalFieldPvE.CanUse(out act))
+            {
+                return true;
+            }
+        }
+
+        if (Player.WillStatusEndGCD(1, 0, true, StatusID.ExcavatorReady))
+        {
+            if (ExcavatorPvE.CanUse(out act))
+            {
+                return true;
+            }
+        }
+
         // ensure combo is not broken, okay to drop during overheat
         if (IsLastComboAction(true, SlugShotPvE) && LiveComboTime >= GCDTime(1) && LiveComboTime <= GCDTime(2) && !IsOverheated)
         {
@@ -311,9 +327,19 @@ public sealed class MCH_Reborn : MachinistRotation
         // 1 AOE
         if (!IsOverheated)
         {
-            if (SpreadShotPvE.CanUse(out act))
+            if (ScattergunPvE.EnoughLevel)
             {
-                return true;
+                if (ScattergunPvE.CanUse(out act))
+                {
+                    return true;
+                }
+            }
+            if (!ScattergunPvE.EnoughLevel)
+            {
+                if (SpreadShotPvE.CanUse(out act))
+                {
+                    return true;
+                }
             }
         }
 
@@ -437,7 +463,12 @@ public sealed class MCH_Reborn : MachinistRotation
         // Opener
         if (Battery == 60 && IsLastGCD(false, ExcavatorPvE) && CombatTime < 15)
         {
-            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true))
+            if (AutomatonQueenPvE.CanUse(out act, skipTTKCheck: true))
+            {
+                return true;
+            }
+
+            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true) && !AutomatonQueenPvE.EnoughLevel)
             {
                 return true;
             }
@@ -446,7 +477,12 @@ public sealed class MCH_Reborn : MachinistRotation
         // Only allow battery usage if the current transition matches the expected step
         if (foundStepPair)
         {
-            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true))
+            if (AutomatonQueenPvE.CanUse(out act, skipTTKCheck: true))
+            {
+                return true;
+            }
+
+            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true) && !AutomatonQueenPvE.EnoughLevel)
             {
                 return true;
             }
@@ -456,7 +492,12 @@ public sealed class MCH_Reborn : MachinistRotation
         if ((nextGCD.IsTheSameTo(false, CleanShotPvE, HeatedCleanShotPvE) && Battery > 90)
             || (nextGCD.IsTheSameTo(false, HotShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery > 80))
         {
-            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true))
+            if (AutomatonQueenPvE.CanUse(out act, skipTTKCheck: true))
+            {
+                return true;
+            }
+
+            if (RookAutoturretPvE.CanUse(out act, skipTTKCheck: true) && !AutomatonQueenPvE.EnoughLevel)
             {
                 return true;
             }

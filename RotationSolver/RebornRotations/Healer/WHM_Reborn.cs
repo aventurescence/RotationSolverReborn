@@ -2,12 +2,15 @@ using System.ComponentModel;
 
 namespace RotationSolver.RebornRotations.Healer;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Healer/WHM_Reborn.cs")]
 
 public sealed class WHM_Reborn : WhiteMageRotation
 {
     #region Config Options
+    [RotationConfig(CombatType.PvE, Name = "Limit Liturgy Of The Bell to multihit party stacks")]
+    public bool MultiHitRestrict { get; set; } = false;
+
     [RotationConfig(CombatType.PvE, Name = "Use Tincture/Gemdraught when about to use Presence of Mind")]
     public bool UseMedicine { get; set; } = true;
 
@@ -148,6 +151,14 @@ public sealed class WHM_Reborn : WhiteMageRotation
             return base.DefenseAreaAbility(nextGCD, out act);
         }
 
+        if (MultiHitRestrict && IsCastingMultiHit)
+        {
+            if (LiturgyOfTheBellPvE.CanUse(out act, skipAoeCheck: true))
+            {
+                return true;
+            }
+        }
+
         if (TemperancePvE.CanUse(out act))
         {
             return true;
@@ -158,9 +169,12 @@ public sealed class WHM_Reborn : WhiteMageRotation
             return true;
         }
 
-        if (LiturgyOfTheBellPvE.CanUse(out act, skipAoeCheck: true))
+        if ((MultiHitRestrict && IsCastingMultiHit) || !MultiHitRestrict)
         {
-            return true;
+            if (LiturgyOfTheBellPvE.CanUse(out act, skipAoeCheck: true))
+            {
+                return true;
+            }
         }
 
         return base.DefenseAreaAbility(nextGCD, out act);

@@ -11,6 +11,7 @@ using Lumina.Excel.Sheets;
 using RotationSolver.Basic.Configuration;
 using RotationSolver.Basic.Configuration.Conditions;
 using RotationSolver.Basic.Rotations.Duties;
+using System.Collections.Concurrent;
 using Action = Lumina.Excel.Sheets.Action;
 using CharacterManager = FFXIVClientStructs.FFXIV.Client.Game.Character.CharacterManager;
 using CombatRole = RotationSolver.Basic.Data.CombatRole;
@@ -54,7 +55,7 @@ internal static class DataCenter
     internal static List<uint> PrioritizedNameIds { get; set; } = [];
     internal static List<uint> BlacklistedNameIds { get; set; } = [];
 
-    internal static List<VfxNewData> VfxDataQueue { get; } = [];
+    internal static ConcurrentQueue<VfxNewData> VfxDataQueue { get; } = new();
 
     /// <summary>
     /// This one never be null.
@@ -973,7 +974,7 @@ internal static class DataCenter
         _actions.Clear();
 
         AttackedTargets.Clear();
-        VfxDataQueue.Clear();
+        while (VfxDataQueue.TryDequeue(out _)) { }
         AllHostileTargets.Clear();
         AllianceMembers.Clear();
         PartyMembers.Clear();
@@ -1160,17 +1161,16 @@ internal static class DataCenter
         return check?.Invoke(action) ?? false; // Check if check is null
     }
 
-    public static bool IsCastingVfx(List<VfxNewData> vfxDataQueueCopy, Func<VfxNewData, bool> isVfx)
+    public static bool IsCastingVfx(VfxNewData[] vfxData, Func<VfxNewData, bool> isVfx)
     {
-        // If thread safety is not a concern, avoid copying the list
-        if (vfxDataQueueCopy.Count == 0)
+        if (vfxData == null || vfxData.Length == 0)
         {
             return false;
         }
 
-        for (int i = 0, n = vfxDataQueueCopy.Count; i < n; i++)
+        for (int i = 0, n = vfxData.Length; i < n; i++)
         {
-            if (isVfx(vfxDataQueueCopy[i]))
+            if (isVfx(vfxData[i]))
             {
                 return true;
             }
@@ -1178,9 +1178,33 @@ internal static class DataCenter
         return false;
     }
 
+    public static bool IsCastingMultiHit()
+    {
+        return IsCastingVfx([.. VfxDataQueue], s =>
+        {
+            if (!Player.AvailableThreadSafe)
+            {
+                return false;
+            }
+
+            // For x6fe, ignore target and player role checks.
+            if (s.Path.StartsWith("vfx/lockon/eff/com_share5a1"))
+            {
+                return true;
+            }
+
+            if (s.Path.StartsWith("vfx/lockon/eff/m0922trg_t2w"))
+            {
+                return true;
+            }
+
+            return false;
+        });
+    }
+
     public static bool IsCastingTankVfx()
     {
-        return IsCastingVfx(VfxDataQueue, s =>
+        return IsCastingVfx([.. VfxDataQueue], s =>
         {
             if (!Player.AvailableThreadSafe)
             {
@@ -1202,7 +1226,7 @@ internal static class DataCenter
 
     public static bool IsCastingAreaVfx()
     {
-        return IsCastingVfx(VfxDataQueue, s =>
+        return IsCastingVfx([.. VfxDataQueue], s =>
         {
             return Player.AvailableThreadSafe && (s.Path.StartsWith("vfx/lockon/eff/coshare")
             || s.Path.StartsWith("vfx/lockon/eff/share_laser")

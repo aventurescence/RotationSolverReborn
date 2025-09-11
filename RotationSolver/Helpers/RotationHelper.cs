@@ -58,9 +58,4 @@ internal static class RotationHelper
         return attributes;
     }
 
-    private static string GetAuthor(string filePath, string? assemblyName)
-    {
-        FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(filePath);
-        return string.IsNullOrWhiteSpace(fileVersionInfo.CompanyName) ? assemblyName ?? string.Empty : fileVersionInfo.CompanyName;
-    }
 }

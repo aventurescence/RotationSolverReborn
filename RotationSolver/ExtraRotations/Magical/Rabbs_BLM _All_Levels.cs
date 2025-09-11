@@ -244,9 +244,9 @@ public sealed class Rabbs_BLM : BlackMageRotation
     }
     //public double GetGCDRecastTime => ActionManager.GetAdjustedRecastTime(ActionType.Action, 162) / 1000.00;
 
-    public bool willHave2PolyglotWithin6GCDs => (PolyglotStacks == 1 && EnochianTime < 6 * 2.5) || PolyglotStacks >= 2;
+    public static bool WillHave2PolyglotWithin6GCDs => (PolyglotStacks == 1 && EnochianTime < 6 * 2.5) || PolyglotStacks >= 2;
 
-    public bool willHave2PolyglotWithin2GCDs => (PolyglotStacks == 1 && EnochianTime < 2 * 2.5) || PolyglotStacks >= 2;
+    public static bool WillHave2PolyglotWithin2GCDs => (PolyglotStacks == 1 && EnochianTime < 2 * 2.5) || PolyglotStacks >= 2;
 
     public bool WillBeAbleToFlareStarST
     {
@@ -273,11 +273,10 @@ public sealed class Rabbs_BLM : BlackMageRotation
             // calculate the mp needed to get to 6 stacks
             int howMuchManaINeed = (discountedCasts * fireFourCostWithHeart) + (normalCasts * baseFireFourCost);
 
-            if (CurrentMp > howMuchManaINeed)
+            if (CurrentMp >= howMuchManaINeed)
             {
                 return true;
             }
-
 
             return false;
         }
@@ -307,12 +306,12 @@ public sealed class Rabbs_BLM : BlackMageRotation
                     return true;
                 }
             }
+
             if (flaresNeeded == 1)
-                if (CurrentMp > 800)
+                if (CurrentMp >= 800)
                 {
                     return true;
                 }
-
 
             return false; // If we can afford all the needed Flare casts
         }
@@ -576,7 +575,6 @@ public sealed class Rabbs_BLM : BlackMageRotation
                     if (CanMakeInstant)
                     {
                         if (SwiftcastPvE.CanUse(out act)) return act;
-                        if (TriplecastPvE.CanUse(out act, usedUp: true)) return act;
                     }
                 }
             }
@@ -605,7 +603,6 @@ public sealed class Rabbs_BLM : BlackMageRotation
                         if (TriplecastPvE.CanUse(out act, usedUp: true)) return true;
                     }
                     if (SwiftcastPvE.CanUse(out act)) return true;
-                    if (TriplecastPvE.CanUse(out act, usedUp: true)) return true;
                 }
             }
 
@@ -663,7 +660,7 @@ public sealed class Rabbs_BLM : BlackMageRotation
                 {
                     if (UmbralHearts > 0)
                     {
-                        if (nextGCD.IsTheSameTo(true, FlarePvE) && ThunderBuffMoreThan10 && !willHave2PolyglotWithin6GCDs) //checking if we won't need to refresh thunder AND we wont have foul after freeze (6gcd's)
+                        if (nextGCD.IsTheSameTo(true, FlarePvE) && ThunderBuffMoreThan10 && !WillHave2PolyglotWithin6GCDs) //checking if we won't need to refresh thunder AND we wont have foul after freeze (6gcd's)
                         {
                             if (!NextGCDisInstant && TriplecastPvE.Cooldown.CurrentCharges > 0 && InCombat)
                             {
@@ -740,11 +737,7 @@ public sealed class Rabbs_BLM : BlackMageRotation
                 {
                     if (IsLastAction(ActionID.TransposePvE))
                     {
-                        if (CanMakeInstant)
-                        {
-                            if (SwiftcastPvE.CanUse(out act)) return true;
-                            if (TriplecastPvE.CanUse(out act, usedUp: true)) return true;
-                        }
+                        if (SwiftcastPvE.CanUse(out act)) return true;
                     }
                 }
 
@@ -941,7 +934,7 @@ public sealed class Rabbs_BLM : BlackMageRotation
                     if (AstralSoulStacks == 0)
                     {
                         if (ThunderIiPvE.CanUse(out act, skipAoeCheck: true) && ShouldThunder) return true;
-                        if (willHave2PolyglotWithin2GCDs)
+                        if (WillHave2PolyglotWithin2GCDs)
                         {
                             if (FoulPvE.CanUse(out act, skipAoeCheck: true)) return true;
                         }
@@ -967,7 +960,7 @@ public sealed class Rabbs_BLM : BlackMageRotation
                         if (FoulPvE.CanUse(out act, skipAoeCheck: true, usedUp: true)) return true;
                         if (ParadoxPvE.CanUse(out act, skipAoeCheck: true)) return true;
                     }
-                    if (FreezePvE.CanUse(out act, skipAoeCheck: true)) return true;
+                    if (FreezePvE.CanUse(out act, skipAoeCheck: true) && UmbralHearts == 0) return true;
                 }
                 //assumes neither, either start of combat in dungeon or death recovery, use high blizard II as there are no other options
                 if (!InUmbralIce && !InAstralFire)
@@ -993,7 +986,7 @@ public sealed class Rabbs_BLM : BlackMageRotation
                     {
 
                         if (ThunderIiPvE.CanUse(out act, skipAoeCheck: true) && ShouldThunder) return true;
-                        if (willHave2PolyglotWithin2GCDs)
+                        if (WillHave2PolyglotWithin2GCDs)
                         {
                             if (FoulPvE.CanUse(out act, skipAoeCheck: true)) return true;
                         }
@@ -1116,7 +1109,7 @@ public sealed class Rabbs_BLM : BlackMageRotation
                         if (ParadoxPvE.CanUse(out act, skipStatusProvideCheck: true)) return true;
                     }
 
-                    if (BlizzardIiiPvE.CanUse(out act)) return true;
+                    if (BlizzardIiiPvE.CanUse(out act) && CurrentMp < 10000) return true;
 
                 }
                 if (!InUmbralIce && !InAstralFire)

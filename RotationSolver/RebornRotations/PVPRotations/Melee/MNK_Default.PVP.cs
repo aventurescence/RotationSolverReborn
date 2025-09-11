@@ -1,6 +1,6 @@
 ﻿namespace RotationSolver.RebornRotations.PVPRotations.Melee;
 
-[Rotation("Default", CombatType.PvP, GameVersion = "7.3")]
+[Rotation("Default", CombatType.PvP, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/PVPRotations/Melee/MNK_Default.PVP.cs")]
 
 public sealed class MNK_DefaultPvP : MonkRotation
@@ -58,9 +58,9 @@ public sealed class MNK_DefaultPvP : MonkRotation
             return true;
         }
 
-        if (SmitePvP.CanUse(out action) && CurrentTarget?.GetHealthRatio() <= SmitePvPPercent)
+        if (SmitePvP.CanUse(out action) && SmitePvP.Target.Target.GetHealthRatio() <= SmitePvPPercent)
         {
-            return true;
+            return false;
         }
 
         return base.EmergencyAbility(nextGCD, out action);
@@ -73,7 +73,7 @@ public sealed class MNK_DefaultPvP : MonkRotation
             return base.AttackAbility(nextGCD, out action);
         }
 
-        if (RisingPhoenixPvP.CanUse(out action, usedUp: true) && HasHostilesInRange)
+        if (NumberOfHostilesInRangeOf(6) > 0 && RisingPhoenixPvP.CanUse(out action, usedUp: true) && InCombat)
         {
             return true;
         }

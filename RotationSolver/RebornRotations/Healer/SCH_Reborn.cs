@@ -2,12 +2,15 @@ using System.ComponentModel;
 
 namespace RotationSolver.RebornRotations.Healer;
 
-[Rotation("Reborn", CombatType.PvE, GameVersion = "7.3")]
+[Rotation("Reborn", CombatType.PvE, GameVersion = "7.31")]
 [SourceCode(Path = "main/RebornRotations/Healer/SCH_Reborn.cs")]
 
 public sealed class SCH_Reborn : ScholarRotation
 {
     #region Config Options
+    [RotationConfig(CombatType.PvE, Name = "Limit Seraphism to multihit party stacks")]
+    public bool MultiHitRestrict { get; set; } = false;
+
     [Range(0, 1, ConfigUnitType.Percent)]
     [RotationConfig(CombatType.PvE, Name = "Remove Aetherpact if the linked party member's HP is above this percentage")]
     public float AetherpactRemove { get; set; } = 0.9f;
@@ -165,7 +168,8 @@ public sealed class SCH_Reborn : ScholarRotation
             {
                 if (DeploymentTacticsPvE.CanUse(out act))
                 {
-                    if (DeploymentTacticsPvE.Target.Target.IsParty() && DeploymentTacticsPvE.Target.Target.HasStatus(true, StatusID.Catalyze))
+                    IBattleChara t = DeploymentTacticsPvE.Target.Target;
+                    if (t.IsParty() && (t.HasStatus(true, StatusID.Catalyze) || t.HasStatus(true, StatusID.Galvanize)))
                     {
                         return true;
                     }
@@ -406,9 +410,12 @@ public sealed class SCH_Reborn : ScholarRotation
         }
 
         // Seraphism is really good but we want to save it if we can, and should alternate it with Summon Seraph outside of the hardest content
-        if ((SummonSeraphPvE.Cooldown.IsCoolingDown || CurrentMp <= EmergencyHealingMPThreshold) && SeraphismPvE.CanUse(out act))
+        if ((MultiHitRestrict && IsCastingMultiHit) || !MultiHitRestrict)
         {
-            return true;
+            if ((SummonSeraphPvE.Cooldown.IsCoolingDown || CurrentMp <= EmergencyHealingMPThreshold) && SeraphismPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
 
         if (WhisperingDawnPvE.Cooldown.IsCoolingDown && FeyBlessingPvE.Cooldown.IsCoolingDown)

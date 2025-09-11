@@ -238,7 +238,10 @@ public partial class SummonerRotation
 
     static partial void ModifyPhysickPvE(ref ActionSetting setting)
     {
-
+        setting.CreateConfig = () => new ActionConfig()
+        {
+            GCDSingleHeal = true,
+        };
     }
 
     static partial void ModifyAetherchargePvE(ref ActionSetting setting)

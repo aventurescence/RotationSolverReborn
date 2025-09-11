@@ -23,7 +23,6 @@ internal class SearchableCollection
 
         List<SearchPair> pairs = new(propertiesLength);
         Dictionary<string, CheckBoxSearch> parents = new(propertiesLength);
-        _ = new ConcurrentDictionary<PropertyInfo, UIAttribute>();
 
         foreach (PropertyInfo property in properties)
         {

@@ -326,8 +326,8 @@ internal partial class Configs : IPluginConfiguration
     /// <markdown file="Auto" name="Stop Healing Cast After Reaching Threshold" section="Healing Usage and Control" isSubsection="1">
     /// When enabled, you can customize the healing thresholds for when healing will be cast occur on target(s).
     /// </markdown>
-    [ConditionBool, UI("Stop healing after reaching threshold. (Experimental)", Filter = HealingActionCondition, Section = 1, Order = 2, Description = "If you have another healer on the team, their healing might put the target player(s) above the healing threshold and you'll waste MP. This interrupts the cast if it happens.")]
-    private static readonly bool _stopHealingAfterThresholdExperimental = false;
+    [ConditionBool, UI("Stop single target GCD healing after reaching threshold. (EXTREMELY Experimental)", Filter = HealingActionCondition, Section = 1, Order = 2, Description = "If you have another healer on the team, their healing might put the target player(s) above the healing threshold and you'll waste MP. This interrupts the cast if it happens.")]
+    private static readonly bool _stopHealingAfterThresholdExperimental2 = false;
 
     /// <markdown file="Auto" name="Auto-use oGCD abilities" section="Action Usage and Control" isSubsection="1">
     /// Whether to use oGCD abilities or not at all.
@@ -720,6 +720,17 @@ internal partial class Configs : IPluginConfiguration
     Description = "Dynamically adjusts cooldown and animation locks to ensure queued actions resolve immediately regardless of framerate limitations",
     Filter = Extra)]
     private static readonly bool _removeCooldownDelay = false;
+
+    // Cactbot timeline integration
+    [ConditionBool, UI("Enable cactbot timeline integration (Extremely experimental)",
+        Description = "Connects to OverlayPlugin's WebSocket server and reacts to cactbot broadcast messages (raidwide, tankbuster, knockback, downtime/untargetable).",
+        Filter = Extra)]
+    private static readonly bool _enableCactbotTimeline = false;
+
+    [ConditionBool, UI("Show cactbot event toasts (debug)",
+    Description = "Show a toast when a cactbot broadcast is received and mapped to a RotationSolver special.",
+    Filter = Extra)]
+    private static readonly bool _showCactbotToasts = false;
 
     [JobConfig, UI("The HP for using Guard.",
         Filter = PvPSpecificControls)]
