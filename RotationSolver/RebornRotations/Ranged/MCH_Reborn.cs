@@ -215,6 +215,22 @@ public sealed class MCH_Reborn : MachinistRotation
     #region GCD Logic
     protected override bool GeneralGCD(out IAction? act)
     {
+        if (Player.WillStatusEndGCD(1, 0, true, StatusID.FullMetalMachinist))
+        {
+            if (FullMetalFieldPvE.CanUse(out act))
+            {
+                return true;
+            }
+        }
+
+        if (Player.WillStatusEndGCD(1, 0, true, StatusID.ExcavatorReady))
+        {
+            if (ExcavatorPvE.CanUse(out act))
+            {
+                return true;
+            }
+        }
+
         // ensure combo is not broken, okay to drop during overheat
         if (IsLastComboAction(true, SlugShotPvE) && LiveComboTime >= GCDTime(1) && LiveComboTime <= GCDTime(2) && !IsOverheated)
         {
@@ -311,9 +327,19 @@ public sealed class MCH_Reborn : MachinistRotation
         // 1 AOE
         if (!IsOverheated)
         {
-            if (SpreadShotPvE.CanUse(out act))
+            if (ScattergunPvE.EnoughLevel)
             {
-                return true;
+                if (ScattergunPvE.CanUse(out act))
+                {
+                    return true;
+                }
+            }
+            if (!ScattergunPvE.EnoughLevel)
+            {
+                if (SpreadShotPvE.CanUse(out act))
+                {
+                    return true;
+                }
             }
         }
 

@@ -77,7 +77,7 @@ internal class Service : IDisposable
             }
 
             VfxNewData newVfx = new(battleChara.GameObjectId, path);
-            DataCenter.VfxDataQueue.Add(newVfx);
+            DataCenter.VfxDataQueue.Enqueue(newVfx);
         }
         catch (Exception ex)
         {

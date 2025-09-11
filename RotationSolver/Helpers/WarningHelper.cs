@@ -5,9 +5,13 @@ public static class WarningHelper
     public static void AddSystemWarning(string message)
     {
         DataCenter.SystemWarnings ??= [];
-        if (!DataCenter.SystemWarnings.ContainsKey(message))
+        var dict = DataCenter.SystemWarnings;
+        lock (dict)
         {
-            DataCenter.SystemWarnings.Add(message, DateTime.Now);
+            if (!dict.ContainsKey(message))
+            {
+                dict[message] = DateTime.Now;
+            }
         }
     }
 }

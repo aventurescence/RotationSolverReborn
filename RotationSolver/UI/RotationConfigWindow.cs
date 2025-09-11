@@ -3540,6 +3540,12 @@ public partial class RotationConfigWindow : Window
                 ImGui.Text($"{i + 1}: {jobName}");
             }
         }
+        ImGui.Spacing();
+        float mitigationFraction = CustomRotation.GetCurrentMitigationPercent(); // 0.0–0.95
+        ImGui.Text($"Current Mitigation Percent: {mitigationFraction * 100f:F1}%");
+        ImGui.Text($"Current Mitigation Percent RAW: {mitigationFraction}");
+
+        ImGui.Text($"Is Magical Damage Incoming: {CustomRotation.IsMagicalDamageIncoming()}");
     }
 
     private static unsafe void DrawTargetData()

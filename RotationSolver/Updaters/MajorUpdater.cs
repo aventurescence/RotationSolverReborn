@@ -238,7 +238,10 @@ internal static class MajorUpdater
             // Clear old VFX data
             if (DataCenter.VfxDataQueue.Count > 0)
             {
-                _ = DataCenter.VfxDataQueue.RemoveAll(vfx => vfx.TimeDuration > TimeSpan.FromSeconds(6));
+                while (DataCenter.VfxDataQueue.TryPeek(out var vfx) && vfx.TimeDuration > TimeSpan.FromSeconds(6))
+                {
+                    _ = DataCenter.VfxDataQueue.TryDequeue(out _);
+                }
             }
 
             // Change loaded rotation based on job

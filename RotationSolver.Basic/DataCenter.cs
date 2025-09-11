@@ -8,6 +8,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel.Sheets;
+using System.Collections.Concurrent;
 using RotationSolver.Basic.Configuration;
 using RotationSolver.Basic.Configuration.Conditions;
 using RotationSolver.Basic.Rotations.Duties;
@@ -54,7 +55,7 @@ internal static class DataCenter
     internal static List<uint> PrioritizedNameIds { get; set; } = [];
     internal static List<uint> BlacklistedNameIds { get; set; } = [];
 
-    internal static List<VfxNewData> VfxDataQueue { get; } = [];
+    internal static ConcurrentQueue<VfxNewData> VfxDataQueue { get; } = new();
 
     /// <summary>
     /// This one never be null.
@@ -973,7 +974,7 @@ internal static class DataCenter
         _actions.Clear();
 
         AttackedTargets.Clear();
-        VfxDataQueue.Clear();
+        while (VfxDataQueue.TryDequeue(out _)) { }
         AllHostileTargets.Clear();
         AllianceMembers.Clear();
         PartyMembers.Clear();
@@ -1160,17 +1161,16 @@ internal static class DataCenter
         return check?.Invoke(action) ?? false; // Check if check is null
     }
 
-    public static bool IsCastingVfx(List<VfxNewData> vfxDataQueueCopy, Func<VfxNewData, bool> isVfx)
+    public static bool IsCastingVfx(VfxNewData[] vfxData, Func<VfxNewData, bool> isVfx)
     {
-        // If thread safety is not a concern, avoid copying the list
-        if (vfxDataQueueCopy.Count == 0)
+        if (vfxData == null || vfxData.Length == 0)
         {
             return false;
         }
 
-        for (int i = 0, n = vfxDataQueueCopy.Count; i < n; i++)
+        for (int i = 0, n = vfxData.Length; i < n; i++)
         {
-            if (isVfx(vfxDataQueueCopy[i]))
+            if (isVfx(vfxData[i]))
             {
                 return true;
             }
@@ -1180,7 +1180,7 @@ internal static class DataCenter
 
     public static bool IsCastingTankVfx()
     {
-        return IsCastingVfx(VfxDataQueue, s =>
+        return IsCastingVfx([.. VfxDataQueue], s =>
         {
             if (!Player.AvailableThreadSafe)
             {
@@ -1202,7 +1202,7 @@ internal static class DataCenter
 
     public static bool IsCastingAreaVfx()
     {
-        return IsCastingVfx(VfxDataQueue, s =>
+        return IsCastingVfx([.. VfxDataQueue], s =>
         {
             return Player.AvailableThreadSafe && (s.Path.StartsWith("vfx/lockon/eff/coshare")
             || s.Path.StartsWith("vfx/lockon/eff/share_laser")

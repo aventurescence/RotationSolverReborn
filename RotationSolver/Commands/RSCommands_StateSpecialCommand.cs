@@ -192,7 +192,7 @@ namespace RotationSolver.Commands
             {
                 if (Service.Config.TargetingTypes.Count > 0)
                 {
-                    int lastIdx = Service.Config.TargetingTypes.Count - Service.Config.TargetingTypes.Count;
+                    int lastIdx = Service.Config.TargetingTypes.Count - 1;
                     Service.Config.TargetingIndex = lastIdx;
                     DoStateCommandType(StateCommandType.Auto, lastIdx);
                 }

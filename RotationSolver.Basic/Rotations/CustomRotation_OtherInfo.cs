@@ -370,6 +370,185 @@ public partial class CustomRotation
             return lowest;
         }
     }
+
+    /// <summary>
+    /// Calculates the current cumulative mitigation percentage applied to an imminent AoE or raid-wide hit.
+    /// </summary>
+    /// <returns>
+    /// A normalized mitigation fraction in the range 0.0–0.95 (e.g. 0.25 == 25% damage reduction).
+    /// The value is capped at 0.95 to prevent extreme stacking edge cases.
+    /// </returns>
+    /// <remarks>
+    /// Mitigations and enemy debuffs are applied multiplicatively as damage factors (e.g. 10% reduction = * 0.90).
+    /// The function:
+    /// <list type="bullet">
+    /// <item>Scans hostile targets once for Addle, Feint, and Dismantle.</item>
+    /// <item>Scans party members for active raid/party-wide mitigation statuses (e.g. Sacred Soil, Temperance, Troubadour).</item>
+    /// <item>Handles mixed scaling for effects whose value differs by damage school (e.g. Addle, Feint, Dark Missionary).</item>
+    /// </list>
+    /// Performance impact is minimal given normal FFXIV party sizes.
+    /// </remarks>
+    public static float GetCurrentMitigationPercent()
+    {
+        float damageFactor = 1.0f;
+
+        var partyEnum = PartyMembers;
+        var hostileEnum = AllHostileTargets;
+
+        // Determine (heuristically) if the imminent AoE is magical.
+        bool incomingMagical = IsMagicalDamageIncoming();
+
+        // Enemy debuffs (scan once).
+        bool addle = false;
+        bool feint = false;
+        bool dismantle = false;
+        bool reprisal = false;
+
+        if (hostileEnum != null)
+        {
+            foreach (var e in hostileEnum)
+            {
+                if (e == null) continue;
+
+                // Addle: -10% magical / -5% physical
+                if (!addle && e.HasStatus(false, StatusID.Addle))
+                    addle = true;
+
+                // Feint: -10% physical / -5% magical
+                if (!feint && e.HasStatus(false, StatusID.Feint))
+                    feint = true;
+
+                if (!dismantle && e.HasStatus(false, StatusID.Dismantled))
+                    dismantle = true;
+
+                // Reprisal: -10% all damage (missing previously)
+                if (!reprisal && e.HasStatus(false, StatusID.Reprisal))
+                    reprisal = true;
+
+                if (addle && feint && dismantle && reprisal)
+                    break;
+            }
+        }
+
+        if (addle)
+            damageFactor *= incomingMagical ? 0.90f : 0.95f;
+        if (feint)
+            damageFactor *= incomingMagical ? 0.95f : 0.90f;
+        if (dismantle)
+            damageFactor *= 0.90f;
+        if (reprisal)
+            damageFactor *= 0.90f;
+
+        // Collect party statuses once into a hash set for O(1) lookups.
+        HashSet<StatusID> partyStatuses = [];
+        if (partyEnum != null)
+        {
+            foreach (var m in partyEnum)
+            {
+                if (m == null) continue;
+                // Here we just probe the relevant IDs.
+                // To avoid N*M calls, we gather by probing only needed IDs below if not already present.
+            }
+        }
+
+        // Helper to lazily test & cache a status.
+        bool HasPartyStatus(StatusID id)
+        {
+            if (partyStatuses.Contains(id)) return true;
+            if (partyEnum != null)
+            {
+                foreach (var m in partyEnum)
+                {
+                    if (m == null) continue;
+                    if (m.HasStatus(false, id))
+                    {
+                        partyStatuses.Add(id);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Tank LB3: -80% all damage
+        if (HasPartyStatus(StatusID.LastBastion) 
+            || HasPartyStatus(StatusID.DarkForce) 
+            || HasPartyStatus(StatusID.GunmetalSoul) 
+            || HasPartyStatus(StatusID.LandWaker))
+            damageFactor *= 0.2f;
+
+        if (HasPartyStatus(StatusID.SacredSoil))
+            damageFactor *= 0.90f;
+        if (incomingMagical && HasPartyStatus(StatusID.FeyIllumination))
+            damageFactor *= 0.95f;
+        if (HasPartyStatus(StatusID.DesperateMeasures)) // Expedient mitigation component
+            damageFactor *= 0.90f;
+        if (HasPartyStatus(StatusID.Temperance_1873))
+            damageFactor *= 0.90f;
+        if (HasPartyStatus(StatusID.Holos))
+            damageFactor *= 0.90f;
+        if (HasPartyStatus(StatusID.Kerachole))
+            damageFactor *= 0.90f;
+        if (HasPartyStatus(StatusID.CollectiveUnconscious_849))
+            damageFactor *= 0.90f;
+
+        if (HasPartyStatus(StatusID.Troubadour)
+            || HasPartyStatus(StatusID.ShieldSamba)
+            || HasPartyStatus(StatusID.Tactician_1951))
+            damageFactor *= 0.90f;
+
+        if (HasPartyStatus(StatusID.DarkMissionary))
+            damageFactor *= incomingMagical ? 0.90f : 0.95f;
+
+        if (HasPartyStatus(StatusID.HeartOfLight))
+            damageFactor *= incomingMagical ? 0.90f : 0.95f;
+
+        if (incomingMagical && HasPartyStatus(StatusID.MagickBarrier))
+            damageFactor *= 0.90f;
+
+        if (HasPartyStatus(StatusID.PassageOfArms))
+            damageFactor *= 0.85f;
+
+        float mitigated = 1.0f - damageFactor;
+        return Math.Clamp(mitigated, 0f, 0.95f);
+    }
+
+    /// <summary>
+    /// Determines whether any currently casting hostile action is classified as magical.
+    /// </summary>
+    /// <returns>
+    /// True if at least one hostile target is casting an action whose <c>AttackType.RowId == 5</c> (interpreted as magical); otherwise false.
+    /// </returns>
+    /// <remarks>
+    /// Scans all hostile entities with a non-zero <c>CastActionId</c>, looks up the action row, and inspects the attack type.
+    /// Returns early on the first confirmed magical cast.
+    /// If the action sheet cannot be loaded or no valid casts exist, returns false.
+    /// </remarks>
+    public static bool IsMagicalDamageIncoming()
+    {
+        var hostileEnum = AllHostileTargets;
+        if (hostileEnum == null) return false;
+
+        var actionSheet = Service.GetSheet<Lumina.Excel.Sheets.Action>();
+        if (actionSheet == null) return false;
+
+        foreach (var hostile in hostileEnum)
+        {
+            if (hostile == null) continue;
+            if (hostile.CastActionId == 0) continue;
+
+            var action = actionSheet.GetRow(hostile.CastActionId);
+            if (action.RowId == 0) continue;
+
+            // AttackType row id 5 interpreted as magical.
+            if (action.AttackType.RowId == 5)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     #endregion
 
     #region Target

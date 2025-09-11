@@ -407,6 +407,7 @@ public partial class RedMageRotation
 
     static partial void ModifyMagickBarrierPvE(ref ActionSetting setting)
     {
+        setting.ActionCheck = () => IsMagicalDamageIncoming();
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,

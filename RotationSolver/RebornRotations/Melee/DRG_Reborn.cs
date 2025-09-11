@@ -135,7 +135,7 @@ public sealed class DRG_Reborn : DragoonRotation
                 return true;
             }
 
-            if (lifeSurgeReady && LifeSurgePvE.CanUse(out act, usedUp: true))
+            if (lifeSurgeReady && LifeSurgePvE.CanUse(out act, usedUp: HasLanceCharge))
             {
                 return true;
             }
