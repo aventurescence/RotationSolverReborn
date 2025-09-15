@@ -257,10 +257,19 @@ public sealed class VPR_Reborn : ViperRotation
     #region GCD Logic
     protected override bool GeneralGCD(out IAction? act)
     {
-        act = null;
         if (AbilityPrio2 &&
             !NoAbilityReady)
         {
+            if ((UFGhosting || (!UFGhosting && NoAbilityReady)) && !HasHostilesInRange && UncoiledFuryPvE.CanUse(out act, usedUp: true))
+            {
+                return true;
+            }
+
+            if ((UFGhosting || (!UFGhosting && NoAbilityReady)) && !HasHostilesInRange && WrithingSnapPvE.CanUse(out act))
+            {
+                return true;
+            }
+
             return base.GeneralGCD(out act);
         }
             

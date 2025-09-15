@@ -386,6 +386,12 @@ public struct ActionTargetInfo(IBaseAction action)
             return null;
         }
 
+        // If AoE is disabled, block all hostile non-single-target actions (including ground-targeted)
+        if (!action.Setting.IsFriendly && Service.Config.AoEType == AoEType.Off && !IsSingleTarget)
+        {
+            return null;
+        }
+
         if (IsTargetArea)
         {
             return FindTargetArea(canTargets, canAffects, Range, Player.Object);
@@ -836,11 +842,9 @@ public struct ActionTargetInfo(IBaseAction action)
             yield break;
         }
 
-        // For hostile actions: if AoE is disabled, pass candidates through
+        // For hostile actions: if AoE is disabled, block all non-single-target actions here
         if (!action.Setting.IsFriendly && Service.Config.AoEType == AoEType.Off)
         {
-            foreach (IBattleChara target in canTargets)
-                yield return target;
             yield break;
         }
 

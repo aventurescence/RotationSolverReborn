@@ -37,9 +37,10 @@ public partial class CustomRotation
     {
         act = null;
 
-        if (DataCenter.DeathTarget == null)
+        var target = DataCenter.DeathTarget;
+        if (target == null || !RotationSolver.Basic.Helpers.ObjectHelper.CanBeRaised(target))
         {
-            return act != null;
+            return false;
         }
 
         var prevOverride = IBaseAction.TargetOverride;
@@ -48,12 +49,19 @@ public partial class CustomRotation
         {
             foreach (PhoenixDownItem phoenixdown in PhoenixDowns)
             {
+                // Ensure we propagate the action outward if needed by upstream code
                 if (phoenixdown.CanUse(out act, true))
                 {
-                    ActionManager.Instance()->UseAction(ActionType.Item, 4570, DataCenter.DeathTarget.TargetObjectId);
+                    // Use() handles HQ/NQ and correct target GameObjectId
+                    if (phoenixdown.Use())
+                    {
+                        return true;
+                    }
+                    // If use failed, clear and continue scanning
+                    act = null;
                 }
             }
-            return act != null;
+            return false;
         }
         finally
         {

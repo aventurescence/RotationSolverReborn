@@ -4,9 +4,9 @@
     "net9.0-windows7.0": {
       "ECommons": {
         "type": "Direct",
-        "requested": "[3.0.1.10, )",
-        "resolved": "3.0.1.10",
-        "contentHash": "EHFFs6YlI+DQemaGCyVvcLSYbkDFXds4yndVhS6V96TJ02bFrUiERx6C4erYiYZ25V9C3JblDHcRIhGLfAivuQ=="
+        "requested": "[3.0.1.14, )",
+        "resolved": "3.0.1.14",
+        "contentHash": "lqe2BlFaB6BS2MFXQsu33pIr/axjGmz4K4PoJwYwgcZGvt3JJqFIGLXTHUTYeWvT3eEfByPT0FQ7IdTCHQNdhA=="
       },
       "Svg": {
         "type": "Direct",
@@ -20,11 +20,11 @@
       },
       "System.Drawing.Common": {
         "type": "Direct",
-        "requested": "[9.0.8, )",
-        "resolved": "9.0.8",
-        "contentHash": "ineIJmF+yuBEHGft9R153J9kmBFaeEfFL5Put5nzENneRcGGPUb3MvM8zrZ5pERQ0jPPSE3Wqw/clXvOq2F/Kw==",
+        "requested": "[9.0.9, )",
+        "resolved": "9.0.9",
+        "contentHash": "BS17VFUf4RS9G/JoA6br+79jAjyTj0UaomgXCVNJJn9EWIvmHkn0ZCqAynxwloO00yPIvWgXBF9SBjcM06bl1w==",
         "dependencies": {
-          "Microsoft.Win32.SystemEvents": "9.0.8"
+          "Microsoft.Win32.SystemEvents": "9.0.9"
         }
       },
       "ExCSS": {
@@ -60,8 +60,8 @@
       },
       "Microsoft.Win32.SystemEvents": {
         "type": "Transitive",
-        "resolved": "9.0.8",
-        "contentHash": "64oQBN8I8EOcyHGNt6+rlcqm4tlcKfqOpswtBCJZnpzBQ15L6IFKqjnbjbOWBpG9wKq9A/aC2LFSmSqplbwTYA=="
+        "resolved": "9.0.9",
+        "contentHash": "eJU9vZbN710Cc25p/jPecPEL+gFcnynAvznNRnEvMU7i7u0PSjFXlGO4SOlaIUvkykTlS2N++M9B/coxYT7aPw=="
       },
       "System.Collections.Immutable": {
         "type": "Transitive",

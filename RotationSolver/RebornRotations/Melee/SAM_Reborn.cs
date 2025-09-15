@@ -22,9 +22,6 @@ public sealed class SAM_Reborn : SamuraiRotation
     [RotationConfig(CombatType.PvE, Name = "Enable TEA Checker.")]
     public bool EnableTEAChecker { get; set; } = false;
 
-    [RotationConfig(CombatType.PvE, Name = "Allow Tengentsu/ThirdEye outside of AOE mit scenarios", Parent = nameof(TengentsuHealth))]
-    private bool EnableTengentsuHealth { get; set; } = true;
-
     [Range(0, 1, ConfigUnitType.Percent)]
     [RotationConfig(CombatType.PvE, Name = "Health threshold needed to use Tengentsu/ThirdEye outside of AOE mit scenarios.")]
     public float TengentsuHealth { get; set; } = 0.5f;
@@ -89,13 +86,17 @@ public sealed class SAM_Reborn : SamuraiRotation
     #region oGCD Logic
     protected override bool GeneralAbility(IAction nextGCD, out IAction? act)
     {
-        if (!HasZanshinReady && EnableTengentsuHealth && Player.GetHealthRatio() <= TengentsuHealth)
+        if (!HasZanshinReady && Player.GetHealthRatio() <= TengentsuHealth)
         {
-            if (TengentsuPvE.EnoughLevel && TengentsuPvE.CanUse(out act))
+            if (FeintPvE.CanUse(out act))
             {
                 return true;
             }
-            if (!TengentsuPvE.EnoughLevel && ThirdEyePvE.CanUse(out act))
+            if (TengentsuPvE.CanUse(out act))
+            {
+                return true;
+            }
+            if (ThirdEyePvE.CanUse(out act))
             {
                 return true;
             }
@@ -117,16 +118,6 @@ public sealed class SAM_Reborn : SamuraiRotation
         if (MeikyoShisuiPvE.CanUse(out act, usedUp: !EnhancedMeikyoShisuiTrait.EnoughLevel || (EnhancedMeikyoShisuiTrait.EnoughLevel && MeikyoShisuiPvE.Cooldown.WillHaveXChargesGCD(2, 1)) || TsubamegaeshiActionReady)
             && HasHostilesInRange && (!HasFugetsuAndFuka || (isTargetBoss && isTargetDying) || (CurrentTarget?.HasStatus(true, StatusID.Higanbana) ?? false) && !(CurrentTarget?.WillStatusEndGCD(HiganbanaPvE.Config.StatusGcdCount, 0, true, StatusID.Higanbana) ?? false)))
         {
-            if (!HasFugetsuAndFuka)
-            {
-                return true;
-            }
-
-            if (TsubamegaeshiActionReady)
-            {
-                return true;
-            }
-
             if ((!EnhancedHissatsuTrait.EnoughLevel && SenCount == 0 && !TsubamegaeshiActionReady) || !HasFugetsuAndFuka)
             {
                 return true;
@@ -153,15 +144,12 @@ public sealed class SAM_Reborn : SamuraiRotation
 
         if (!HasZanshinReady)
         {
-            if (!CombatElapsedLessGCD(2) && IkishotenPvE.CanUse(out act))
+            if (!CombatElapsedLessGCD(2) && Kenki <= 50 && IkishotenPvE.CanUse(out act))
             {
                 return true;
             }
 
-            if ((IkishotenPvE.EnoughLevel && !IkishotenPvE.Cooldown.WillHaveOneChargeGCD(3) && Kenki >= 75) 
-                || (IkishotenPvE.EnoughLevel && IkishotenPvE.Cooldown.IsCoolingDown && IkishotenPvE.Cooldown.WillHaveOneChargeGCD(3) && Kenki >= 50)
-                || (IkishotenPvE.EnoughLevel && !IkishotenPvE.Cooldown.IsCoolingDown && Kenki >= 50)
-                || (!IkishotenPvE.EnoughLevel && Kenki >= 25))
+            if (IkishotenPvE.Cooldown.IsCoolingDown && Kenki >= 25)
             {
                 if (HissatsuGurenPvE.CanUse(out act, skipAoeCheck: !HissatsuSeneiPvE.EnoughLevel))
                 {
@@ -172,31 +160,18 @@ public sealed class SAM_Reborn : SamuraiRotation
                 {
                     return true;
                 }
+            }
 
-                if (EnhancedIaijutsuTrait.EnoughLevel && HissatsuSeneiPvE.Cooldown.IsCoolingDown)
+            if (Kenki >= 50 || (!IkishotenPvE.EnoughLevel && Kenki >= 25))
+            {
+                if (HissatsuKyutenPvE.CanUse(out act))
                 {
-                    if (HissatsuKyutenPvE.CanUse(out act))
-                    {
-                        return true;
-                    }
-
-                    if (HissatsuShintenPvE.CanUse(out act))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
 
-                if (!EnhancedIaijutsuTrait.EnoughLevel && HissatsuSeneiPvE.Cooldown.IsCoolingDown)
+                if (HissatsuShintenPvE.CanUse(out act))
                 {
-                    if (HissatsuKyutenPvE.CanUse(out act))
-                    {
-                        return true;
-                    }
-
-                    if (HissatsuShintenPvE.CanUse(out act))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
@@ -351,25 +326,15 @@ public sealed class SAM_Reborn : SamuraiRotation
             return true;
         }
 
-        if (TendoKaeshiSetsugekkaPvE.CanUse(out act))
+        // use 2nd finisher combo spell first
+        if (KaeshiSetsugekkaPvE.CanUse(out act))
         {
             return true;
         }
 
-        if (KaeshiSetsugekkaPvE.CanUse(out act))
+        if (TendoKaeshiSetsugekkaPvE.CanUse(out act))
         {
-            if (HasTendo)
-            {
-                return true;
-            }
-            if (HasTsubamegaeshiReady && SenCount == 3)
-            {
-                return true;
-            }
-            if (HissatsuSeneiPvE.Cooldown.IsCoolingDown && !HissatsuSeneiPvE.Cooldown.WillHaveOneCharge(33))
-            {
-                return true;
-            }
+            return true;
         }
 
         if (OgiNamikiriPvE.CanUse(out act) && OgiNamikiriPvE.Target.Target != null)

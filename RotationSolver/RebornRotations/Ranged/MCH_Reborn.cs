@@ -120,13 +120,27 @@ public sealed class MCH_Reborn : MachinistRotation
         }
 
         // Start Ricochet/Gauss cooldowns rolling if they are not already
-        if (!RicochetPvE.Cooldown.IsCoolingDown && RicochetPvE.CanUse(out act))
+        if (!RicochetPvE.Cooldown.IsCoolingDown)
         {
-            return true;
+            if (CheckmatePvE.EnoughLevel && CheckmatePvE.CanUse(out act))
+            {
+                return true;
+            }
+            if (!CheckmatePvE.EnoughLevel && RicochetPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
-        if (!GaussRoundPvE.Cooldown.IsCoolingDown && GaussRoundPvE.CanUse(out act))
+        if (!GaussRoundPvE.Cooldown.IsCoolingDown)
         {
-            return true;
+            if (DoubleCheckPvE.EnoughLevel && DoubleCheckPvE.CanUse(out act))
+            {
+                return true;
+            }
+            if (!DoubleCheckPvE.EnoughLevel && GaussRoundPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
 
         if (IsBurst)
@@ -199,12 +213,24 @@ public sealed class MCH_Reborn : MachinistRotation
         switch (whichToUse)
         {
             case "Ricochet":
-                if (RicochetPvE.CanUse(out act, usedUp: true))
+                if (CheckmatePvE.EnoughLevel && CheckmatePvE.CanUse(out act, usedUp: true))
+                {
                     return true;
+                }
+                if (!CheckmatePvE.EnoughLevel && RicochetPvE.CanUse(out act, usedUp: true))
+                {
+                    return true;
+                }
                 break;
             case "GaussRound":
-                if (GaussRoundPvE.CanUse(out act, usedUp: true))
+                if (DoubleCheckPvE.EnoughLevel && DoubleCheckPvE.CanUse(out act, usedUp: true))
+                {
                     return true;
+                }
+                if (!DoubleCheckPvE.EnoughLevel && GaussRoundPvE.CanUse(out act, usedUp: true))
+                {
+                    return true;
+                }
                 break;
         }
 
@@ -235,7 +261,11 @@ public sealed class MCH_Reborn : MachinistRotation
         if (IsLastComboAction(true, SlugShotPvE) && LiveComboTime >= GCDTime(1) && LiveComboTime <= GCDTime(2) && !IsOverheated)
         {
             // 3
-            if (CleanShotPvE.CanUse(out act))
+            if (HeatedCleanShotPvE.EnoughLevel && HeatedCleanShotPvE.CanUse(out act))
+            {
+                return true;
+            }
+            if (!HeatedCleanShotPvE.EnoughLevel && CleanShotPvE.CanUse(out act))
             {
                 return true;
             }
@@ -245,7 +275,11 @@ public sealed class MCH_Reborn : MachinistRotation
         if (IsLastComboAction(true, SplitShotPvE) && LiveComboTime >= GCDTime(1) && LiveComboTime <= GCDTime(2) && !IsOverheated)
         {
             // 2
-            if (SlugShotPvE.CanUse(out act))
+            if (HeatedSlugShotPvE.EnoughLevel && HeatedSlugShotPvE.CanUse(out act))
+            {
+                return true;
+            }
+            if (!HeatedSlugShotPvE.EnoughLevel && SlugShotPvE.CanUse(out act))
             {
                 return true;
             }
@@ -258,7 +292,11 @@ public sealed class MCH_Reborn : MachinistRotation
         }
 
         // Overheated ST
-        if (HeatBlastPvE.CanUse(out act))
+        if (BlazingShotPvE.EnoughLevel && BlazingShotPvE.CanUse(out act))
+        {
+            return true;
+        }
+        if (!BlazingShotPvE.EnoughLevel && HeatBlastPvE.CanUse(out act))
         {
             return true;
         }
@@ -344,17 +382,29 @@ public sealed class MCH_Reborn : MachinistRotation
         }
 
         // 3 ST
-        if (CleanShotPvE.CanUse(out act))
+        if (HeatedCleanShotPvE.EnoughLevel && HeatedCleanShotPvE.CanUse(out act))
+        {
+            return true;
+        }
+        if (!HeatedCleanShotPvE.EnoughLevel && CleanShotPvE.CanUse(out act))
         {
             return true;
         }
         // 2 ST
-        if (SlugShotPvE.CanUse(out act))
+        if (HeatedSlugShotPvE.EnoughLevel && HeatedSlugShotPvE.CanUse(out act))
+        {
+            return true;
+        }
+        if (!HeatedSlugShotPvE.EnoughLevel && SlugShotPvE.CanUse(out act))
         {
             return true;
         }
         // 1 ST
-        if (SplitShotPvE.CanUse(out act))
+        if (HeatedSplitShotPvE.EnoughLevel && HeatedSplitShotPvE.CanUse(out act))
+        {
+            return true;
+        }
+        if (!HeatedSplitShotPvE.EnoughLevel && SplitShotPvE.CanUse(out act))
         {
             return true;
         }

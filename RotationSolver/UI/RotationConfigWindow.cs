@@ -6,6 +6,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using ECommons;
 using ECommons.DalamudServices;
@@ -114,10 +115,6 @@ public partial class RotationConfigWindow : Window
             if (p.IsInstalled && p.IsEnabled)
             {
                 _enabledIncompatiblePlugins.Add(p);
-                if ((int)p.Type == 5)
-                {
-                    _crashPlugins.Add(p);
-                }
             }
         }
 
@@ -283,7 +280,6 @@ public partial class RotationConfigWindow : Window
     private void DrawDiagnosticInfoCube()
     {
         StringBuilder diagInfo = new();
-        Vector4 diagColor = new(1f, 1f, 1f, .3f);
 
         if (_cachedDiagInfo == null && DalamudReflector.TryGetDalamudStartInfo(out Dalamud.Common.DalamudStartInfo? startinfo, Svc.PluginInterface))
         {
@@ -306,15 +302,41 @@ public partial class RotationConfigWindow : Window
             _ = diagInfo.AppendLine($"Intercept: {Service.Config.InterceptAction2}");
         }
 
-        if (_enabledIncompatiblePlugins.Count > 0)
+        // Ensure that IncompatiblePlugins is not null
+        IncompatiblePlugin[] incompatiblePlugins = DownloadHelper.IncompatiblePlugins ?? [];
+
+        bool anyCrash = false;
+        _ = diagInfo.AppendLine("\nPlugins:");
+        foreach (IncompatiblePlugin item in incompatiblePlugins)
         {
-            _ = diagInfo.AppendLine("\nPlugins:");
+            if (item.IsEnabled)
+            {
+                string name = item.Name ?? "Unnamed Incompatible Plugin";
+
+                // Flag that at least one crash-prone plugin is enabled so the info marker pulses red
+                if (item.Type.HasFlag(CompatibleType.Crash))
+                {
+                    anyCrash = true;
+                }
+
+                // List all enabled incompatible plugins
+                _ = diagInfo.AppendLine($"{name}");
+            }
         }
 
-        foreach (IncompatiblePlugin plugin in _enabledIncompatiblePlugins)
+        // Pulse red if any crash-flagged plugin is enabled, otherwise yellow for general incompatibles
+        Vector4 diagColor;
+        if (anyCrash)
         {
-            _ = diagInfo.AppendLine(value: plugin.Name ?? "Unnamed Incompatible Plugin");
-            diagColor = (int)plugin.Type == 5 ? new Vector4(1f, 0f, 0f, .3f) : new Vector4(1f, 1f, .4f, .3f);
+            // Alpha pulses between ~0.25 and ~0.70 at a comfortable speed
+            float t = (float)ImGui.GetTime();
+            float pulse = (MathF.Sin(t * 4f) + 1f) * 0.5f; // 0..1
+            float alpha = 0.25f + (0.45f * pulse);
+            diagColor = new Vector4(1f, 0f, 0f, alpha);
+        }
+        else
+        {
+            diagColor = new Vector4(1f, 1f, .4f, .3f);
         }
 
         ImGui.SetCursorPosY(ImGui.GetWindowSize().Y - 20);
