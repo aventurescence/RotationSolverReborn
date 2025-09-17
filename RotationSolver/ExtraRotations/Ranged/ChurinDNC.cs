@@ -10,10 +10,8 @@ public sealed class ChurinDNC : DancerRotation
     #region Properties
 
     #region Constants
-    private const float DefaultAnimationLock = 0.7f;
     private const float TechnicalStepCooldown = 120f;
     private const float StandardStepCooldown = 30f;
-    private const int FlourishCooldown = 60;
     private const int SaberDanceEspritCost = 50;
     private const int HighEspritThreshold = 90;
     private const int BurstEspritThreshold = 70;
@@ -33,13 +31,13 @@ public sealed class ChurinDNC : DancerRotation
     private static bool HasStarfall => HasFlourishingStarfall && !Player.WillStatusEnd(0, true, StatusID.FlourishingStarfall);
     private static bool AreDanceTargetsInRange => AllHostileTargets.Any(target => target.DistanceToPlayer() <= DanceTargetRange) || CurrentTarget?.DistanceToPlayer() <= DanceTargetRange;
     private static bool ShouldSwapDancePartner => CurrentDancePartner != null && (CurrentDancePartner.HasStatus(false, StatusID.Weakness, StatusID.DamageDown, StatusID.BrinkOfDeath, StatusID.DamageDown_2911) || CurrentDancePartner.IsDead);
-    private bool ShouldSwapBackToPartner => CurrentDancePartner != null && ClosedPositionPvE.Target.Target !=null && ClosedPositionPvE.Target.Target != CurrentDancePartner;
+    private bool ShouldSwapBackToPartner => CurrentDancePartner != null && ClosedPositionPvE.Target.Target !=null && ActionTargetInfo.FindTargetByType(PartyMembers, TargetType.DancePartner, 0, SpecialActionType.None ) != CurrentDancePartner;
     #endregion
 
     #region Conditionals
-    private bool ShouldUseTechStep => TechnicalStepPvE.IsEnabled;
+    private bool ShouldUseTechStep => TechnicalStepPvE.IsEnabled && MergedStatus.HasFlag(AutoStatus.Burst);
     private bool ShouldUseStandardStep => StandardStepPvE.IsEnabled && !HasLastDance;
-    private static bool CanWeave => WeaponRemain >= DefaultAnimationLock;
+    private static bool CanWeave => WeaponRemain >= AnimationLock;
 
     private bool CanUseTechnicalStep
     {
@@ -234,7 +232,7 @@ public sealed class ChurinDNC : DancerRotation
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
         act = null;
-        if (IsDancing || !CanWeave) return false;
+        if (IsDancing || !CanWeave) return base.AttackAbility(nextGCD, out act);
         if (TryUseFlourish(out act)) return true;
         return TryUseFeathers(out act) || base.AttackAbility(nextGCD, out act);
     }
@@ -281,9 +279,9 @@ public sealed class ChurinDNC : DancerRotation
     private bool SwapDancePartner(out IAction? act)
     {
         act = null;
-        if (!Player.HasStatus(true, StatusID.ClosedPosition) || !ShouldSwapDancePartner || !ShouldSwapBackToPartner|| !ClosedPositionPvE.IsEnabled) return false;
+        if (!Player.HasStatus(true, StatusID.ClosedPosition) || !ClosedPositionPvE.IsEnabled) return false;
 
-        if ((StandardStepIn(5f) || FinishingMovePvE.Cooldown.WillHaveOneCharge(5) ||TechnicalStepIn(5f)) && (ShouldSwapDancePartner|| ShouldSwapBackToPartner))
+        if ((StandardStepIn(5f) || TechnicalStepIn(5f)) && (ShouldSwapDancePartner|| ShouldSwapBackToPartner))
         {
             return EndingPvE.CanUse(out act);
         }

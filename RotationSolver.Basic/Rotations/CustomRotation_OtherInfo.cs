@@ -491,6 +491,8 @@ public partial class CustomRotation
             damageFactor *= 0.90f;
         if (HasPartyStatus(StatusID.CollectiveUnconscious_849))
             damageFactor *= 0.90f;
+        if (HasPartyStatus(StatusID.SunSign))
+            damageFactor *= 0.90f;
 
         if (HasPartyStatus(StatusID.Troubadour)
             || HasPartyStatus(StatusID.ShieldSamba)

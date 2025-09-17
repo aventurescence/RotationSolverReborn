@@ -16,6 +16,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ECommons" Version="3.0.1.14" />
+    <PackageReference Include="Lumina.Excel" Version="7.3.1" />
+    <PackageReference Include="XIVCalc" Version="0.3.1" />
   </ItemGroup>
   <ItemGroup>
 	  <Reference Include="Dalamud.Common">
