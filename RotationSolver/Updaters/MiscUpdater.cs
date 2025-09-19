@@ -16,6 +16,7 @@ namespace RotationSolver.Updaters;
 
 internal static class MiscUpdater
 {
+    
     internal static void UpdateMisc()
     {
         UpdateEntry();
@@ -52,6 +53,7 @@ internal static class MiscUpdater
                     new IconPayload(icon),
                     new TextPayload(showStr)
                 );
+                
                 if (Service.Config.DTRType == DTRType.DTRNormal)
                 {
                     _dtrEntry.OnClick = _ => RSCommands.CycleStateWithOneTargetTypes();
@@ -72,7 +74,7 @@ internal static class MiscUpdater
                 {
                     _dtrEntry.OnClick = _ => RSCommands.CycleStateManualAuto();
                 }
-            }
+            }           
         }
         else if (_dtrEntry != null && _dtrEntry.Shown)
         {
@@ -290,6 +292,9 @@ internal static class MiscUpdater
 
     public static unsafe void Dispose()
     {
-
+        if (_dtrEntry?.Title != null)
+        {
+            Svc.DtrBar.Remove(_dtrEntry.Title);
+        }
     }
 }

@@ -605,10 +605,6 @@ public partial class CustomRotation
     [RotationDesc(DescType.HealSingleAbility)]
     protected virtual bool HealSingleAbility(IAction nextGCD, out IAction? act)
     {
-        if (RecuperatePvP.CanUse(out act) && !Player.HasStatus(true, StatusID.Guard))
-        {
-            return true;
-        }
 
         act = null;
         return false;
@@ -696,6 +692,11 @@ public partial class CustomRotation
         if (DataCenter.MergedStatus.HasFlag(AutoStatus.NoCasting))
         {
             act = null;
+        }
+
+        if (DataCenter.IsPvP && RecuperatePvP.CanUse(out act) && !Player.HasStatus(true, StatusID.Guard))
+        {
+            return true;
         }
 
         act = null;

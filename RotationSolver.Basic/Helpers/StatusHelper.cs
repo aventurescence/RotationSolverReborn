@@ -144,7 +144,6 @@ public static class StatusHelper
         StatusID.GreatNebula,
         StatusID.Holmgang_409,
         StatusID.LivingDead,
-        StatusID.Superbolide,
     ];
 
     /// <summary>
@@ -153,7 +152,6 @@ public static class StatusHelper
     public static StatusID[] NoPositionalStatus { get; } =
     [
         StatusID.TrueNorth,
-        StatusID.RightEye,
     ];
 
     /// <summary>
@@ -289,7 +287,7 @@ public static class StatusHelper
         }
 
         float statusTime = battleChara.StatusTime(isFromSelf, statusIDs);
-        return (statusTime >= 0 || !battleChara.HasStatus(isFromSelf, statusIDs)) && statusTime <= time;
+        return (statusTime >= 0f || !battleChara.HasStatus(isFromSelf, statusIDs)) && statusTime <= time;
     }
 
     /// <summary>
@@ -320,12 +318,12 @@ public static class StatusHelper
 
                 found = true;
             }
-            return !found ? 0 : Math.Max(0, min - DataCenter.DefaultGCDRemain);
+            return !found ? 0f : Math.Max(0f, min - DataCenter.DefaultGCDRemain);
         }
         catch (Exception ex)
         {
             PluginLog.Error($"Failed to get status time: {ex.Message}");
-            return 0;
+            return 0f;
         }
     }
 

@@ -224,7 +224,6 @@ public sealed class RotationSolverPlugin : IDalamudPlugin, IDisposable
         _ = Task.Run(async () =>
         {
             await DownloadHelper.DownloadAsync();
-            await RotationUpdater.GetAllCustomRotationsAsync();
         });
     }
 
@@ -325,6 +324,7 @@ public sealed class RotationSolverPlugin : IDalamudPlugin, IDisposable
         _dis.Clear();
 
         MajorUpdater.Dispose();
+        MiscUpdater.Dispose();
         HotbarHighlightManager.Dispose();
         ActionTimelineManager.Instance.Dispose();
         await OtherConfiguration.Save();

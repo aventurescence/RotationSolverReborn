@@ -46,6 +46,11 @@ internal static class DataCenter
         return Player.AvailableThreadSafe && (State || IsManual || Service.Config.TeachingMode);
     }
 
+    public static bool PlayerAvailable()
+    {
+        return Player.AvailableThreadSafe;
+    }
+
     internal static IBattleChara? HostileTarget
     {
         get => Svc.Objects.SearchById(_hostileTargetId) as IBattleChara;
@@ -463,10 +468,16 @@ internal static class DataCenter
 
     #region Occult Crescent
     /// <summary>
-    /// Determines if the current content is Bozjan Southern Front or Zadnor.
+    /// Determines if the current content is Occult
     /// </summary>
     public static bool IsInOccultCrescentOp => Content.ContentType == ECommons.GameHelpers.ContentType.FieldOperations
         && Territory?.ContentType == TerritoryContentType.OccultCrescent;
+    
+    /// <summary>
+    /// Determines if the current content is Occult Critical Event
+    /// </summary>
+    public static bool IsInOccultCrescentOpCE => IsInOccultCrescentOp 
+                                                  && Player.Object.HasStatus(false, StatusID.DutiesAsAssigned_4228);
 
     /// <summary>
     /// Determines if the current content is Forked Tower.

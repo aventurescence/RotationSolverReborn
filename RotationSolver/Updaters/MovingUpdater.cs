@@ -24,25 +24,10 @@ internal static class MovingUpdater
             return;
         }
 
-        // Special actions.
-        List<StatusID> statusList = new(4);
-        List<ActionID> actionList = new(4);
-
-        if (Service.Config?.PosFlameThrower == true)
-        {
-            statusList.Add(StatusID.Flamethrower);
-            actionList.Add(ActionID.FlameThrowerPvE);
-        }
-        if (Service.Config?.PosPassageOfArms == true)
-        {
-            statusList.Add(StatusID.PassageOfArms);
-            actionList.Add(ActionID.PassageOfArmsPvE);
-        }
-        if (Service.Config?.PosImprovisation == true)
-        {
-            statusList.Add(StatusID.Improvisation);
-            actionList.Add(ActionID.ImprovisationPvE);
-        }
+        // Config flags for special statuses/actions
+        bool cfgFlame = Service.Config?.PosFlameThrower == true;
+        bool cfgPassage = Service.Config?.PosPassageOfArms == true;
+        bool cfgImpro = Service.Config?.PosImprovisation == true;
 
         // Action
         ActionID action;
@@ -59,26 +44,16 @@ internal static class MovingUpdater
             action = 0;
         }
 
-        bool specialActions = ActionManager.GetAdjustedCastTime(ActionType.Action, (uint)action) > 0;
-        foreach (ActionID id in actionList)
-        {
-            if (Service.GetAdjustedActionId(id) == action)
-            {
-                specialActions = true;
-                break;
-            }
-        }
+        // Special actions
+        bool specialActions = ActionManager.GetAdjustedCastTime(ActionType.Action, (uint)action) > 0
+                              || (cfgFlame && Service.GetAdjustedActionId(ActionID.FlameThrowerPvE) == action)
+                              || (cfgPassage && Service.GetAdjustedActionId(ActionID.PassageOfArmsPvE) == action)
+                              || (cfgImpro && Service.GetAdjustedActionId(ActionID.ImprovisationPvE) == action);
 
-        // Status
-        bool specialStatus = false;
-        foreach (StatusID status in statusList)
-        {
-            if (Player.Object.HasStatus(true, status) == true)
-            {
-                specialStatus = true;
-                break;
-            }
-        }
+        // Special statuses
+        bool specialStatus = (cfgFlame && Player.Object.HasStatus(true, StatusID.Flamethrower))
+                             || (cfgPassage && Player.Object.HasStatus(true, StatusID.PassageOfArms))
+                             || (cfgImpro && Player.Object.HasStatus(true, StatusID.Improvisation));
 
         Service.CanMove = !specialStatus && !specialActions;
     }

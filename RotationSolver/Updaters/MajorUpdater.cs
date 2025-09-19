@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
 using ECommons.DalamudServices;
 using ECommons.GameHelpers;
@@ -13,7 +13,11 @@ namespace RotationSolver.Updaters;
 internal static class MajorUpdater
 {
     private static TimeSpan _timeSinceUpdate = TimeSpan.Zero;
-    private static bool _rotationsLoaded = false;
+
+    // Gating and state for segmented updates
+    private static bool _shouldRunThisCycle;
+    private static bool _isValidThisCycle;
+    private static bool _isActivatedThisCycle;
 
     public static bool IsValid
     {
@@ -22,18 +26,11 @@ internal static class MajorUpdater
             if (!Player.AvailableThreadSafe)
                 return false;
 
-            // Replace Svc.Condition.Any() with manual check
-            bool anyCondition = false;
-            foreach (var conditionFlag in Svc.Condition.AsReadOnlySet())
-            {
-                if (conditionFlag == ConditionFlag.BetweenAreas || conditionFlag == ConditionFlag.BetweenAreas51 || conditionFlag == ConditionFlag.LoggingOut)
-                {
-                    return false;
-                }
-                anyCondition = true; // foreach doesn't execute on an empty enumerable, so this will only be true if there are conditions
-            }
+            // Consider the game valid when not transitioning or logging out.
+            if (Svc.Condition[ConditionFlag.BetweenAreas] || Svc.Condition[ConditionFlag.BetweenAreas51] || Svc.Condition[ConditionFlag.LoggingOut])
+                return false;
 
-            return anyCondition;
+            return true;
         }
     }
 
@@ -42,52 +39,52 @@ internal static class MajorUpdater
     public static void Enable()
     {
         ActionSequencerUpdater.Enable(Svc.PluginInterface.ConfigDirectory.FullName + "\\Conditions");
-        Svc.Framework.Update += RSRUpdate;
 
-        // Load rotations on enable
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await RotationUpdater.GetAllCustomRotationsAsync();
-                _rotationsLoaded = true;
-                PluginLog.Information("Rotations loaded successfully on plugin enable");
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Error($"Failed to load rotations on enable: {ex.Message}");
-            }
-        });
+        Svc.Framework.Update += RSRGateUpdate;
+        Svc.Framework.Update += RSRTeachingClearUpdate;
+        Svc.Framework.Update += RSRInvalidUpdate;
+        Svc.Framework.Update += RSRActivatedCoreUpdate;
+        Svc.Framework.Update += RSRActivatedHighlightUpdate;
+        Svc.Framework.Update += RSRCommonUpdate;
+        Svc.Framework.Update += RSRCleanupUpdate;
+        Svc.Framework.Update += RSRRotationAndStateUpdate;
+        Svc.Framework.Update += RSRMiscAndTargetFreelyUpdate;
+        Svc.Framework.Update += RSRResetUpdate;
     }
 
-    private static void RSRUpdate(IFramework framework)
+    private static void RSRGateUpdate(IFramework framework)
     {
-        _timeSinceUpdate += framework.UpdateDelta;
-        if (_timeSinceUpdate < TimeSpan.FromSeconds(Service.Config.MinUpdatingTime))
+        try
         {
-            return;
-        }
-        else
-        {
-            _timeSinceUpdate = TimeSpan.Zero;
-        }
-
-        // Load rotations if not already loaded and conditions are met
-        if (!_rotationsLoaded && IsValid)
-        {
-            _ = Task.Run(async () =>
+            // Throttle by MinUpdatingTime
+            _timeSinceUpdate += framework.UpdateDelta;
+            if (Service.Config.MinUpdatingTime > 0 && _timeSinceUpdate < TimeSpan.FromSeconds(Service.Config.MinUpdatingTime))
             {
-                try
-                {
-                    await RotationUpdater.GetAllCustomRotationsAsync();
-                    PluginLog.Information("Rotations loaded successfully");
-                }
-                catch (Exception ex)
-                {
-                    PluginLog.Error($"Failed to load rotations: {ex.Message}");
-                }
-            });
+                _shouldRunThisCycle = false;
+                return;
+            }
+
+            _timeSinceUpdate = TimeSpan.Zero;
+            _isValidThisCycle = IsValid;
+            _isActivatedThisCycle = DataCenter.IsActivated();
+            _shouldRunThisCycle = true;
+
+            // Opportunistically load rotations if not yet loaded
+            if (_isValidThisCycle)
+            {
+                RotationUpdater.LoadBuiltInRotations();
+            }
         }
+        catch (Exception ex)
+        {
+            LogOnce("GateUpdate Exception", ex);
+        }
+    }
+
+    private static void RSRTeachingClearUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
 
         if (Service.Config.TeachingMode)
         {
@@ -97,20 +94,17 @@ internal static class MajorUpdater
             }
             catch (Exception ex)
             {
-                if (_threadException != ex)
-                {
-                    _threadException = ex;
-                    PluginLog.Error($"HotbarHighlightManager.HotbarIDs.Clear Exception: {ex.Message}");
-                    if (Service.Config.InDebug)
-                    {
-                        _ = BasicWarningHelper.AddSystemWarning("HotbarHighlightManager.HotbarIDs.Clear Exception");
-                    }
-                }
+                LogOnce("HotbarHighlightManager.HotbarIDs.Clear Exception", ex);
             }
         }
+    }
 
-        // Transistion safe commands
-        if (!IsValid)
+    private static void RSRInvalidUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
+
+        if (!_isValidThisCycle)
         {
             try
             {
@@ -118,109 +112,132 @@ internal static class MajorUpdater
                 ActionUpdater.ClearNextAction();
                 MiscUpdater.UpdateEntry();
                 ActionUpdater.NextAction = ActionUpdater.NextGCDAction = null;
-                return;
             }
             catch (Exception ex)
             {
-                if (_threadException != ex)
-                {
-                    _threadException = ex;
-                    PluginLog.Error($"RSRInvalidUpdate Exception: {ex.Message}");
-                    if (Service.Config.InDebug)
-                    {
-                        _ = BasicWarningHelper.AddSystemWarning("RSRInvalidUpdate Exception");
-                    }
-                }
+                LogOnce("RSRInvalidUpdate Exception", ex);
             }
+
+            // Do not run the rest of the cycle
+            _shouldRunThisCycle = false;
         }
+    }
 
-        if (DataCenter.IsActivated())
-        {
-            try
-            {
-                bool canDoAction = ActionUpdater.CanDoAction();
-                MovingUpdater.UpdateCanMove(canDoAction);
+    private static void RSRActivatedCoreUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
 
-                if (canDoAction)
-                {
-                    RSCommands.DoAction();
-                }
-
-                MacroUpdater.UpdateMacro();
-                TargetUpdater.UpdateTargets();
-                StateUpdater.UpdateState();
-                ActionUpdater.UpdateNextAction();
-                ActionSequencerUpdater.UpdateActionSequencerAction();
-            }
-            catch (Exception ex)
-            {
-                if (_threadException != ex)
-                {
-                    _threadException = ex;
-                    PluginLog.Error($"RSRUpdate DC Exception: {ex.Message}");
-                    if (Service.Config.InDebug)
-                    {
-                        _ = BasicWarningHelper.AddSystemWarning("RSRUpdate DC Exception");
-                    }
-                }
-            }
-
-            // Handle Teaching Mode Highlighting
-            if (Service.Config.TeachingMode && ActionUpdater.NextAction is not null)
-            {
-                try
-                {
-                    IAction nextAction = ActionUpdater.NextAction;
-                    HotbarID? hotbar = null;
-                    if (nextAction is IBaseItem item)
-                    {
-                        hotbar = new HotbarID(HotbarSlotType.Item, item.ID);
-                    }
-                    else if (nextAction is IBaseAction baseAction)
-                    {
-                        hotbar = baseAction.Action.ActionCategory.RowId is 10 or 11
-                                ? GetGeneralActionHotbarID(baseAction)
-                                : new HotbarID(HotbarSlotType.Action, baseAction.AdjustedID);
-                    }
-
-                    if (hotbar.HasValue)
-                    {
-                        _ = HotbarHighlightManager.HotbarIDs.Add(hotbar.Value);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (_threadException != ex)
-                    {
-                        _threadException = ex;
-                        PluginLog.Error($"UpdateHighlight Exception: {ex.Message}");
-                        if (Service.Config.InDebug)
-                        {
-                            _ = BasicWarningHelper.AddSystemWarning("UpdateHighlight Exception");
-                        }
-                    }
-                }
-            }
-        }
+        var autoOnEnabled = Service.Config.StartOnAllianceIsInCombat 
+            || Service.Config.StartOnAttackedBySomeone 
+            || Service.Config.StartOnFieldOpInCombat 
+            || Service.Config.StartOnPartyIsInCombat;
 
         try
         {
-            // Update various combat tracking perameters,
-            // combat time, blue mage/dutyaction slot info, player movement time, player dead status and MP timer.
+            if (autoOnEnabled)
+            {
+                TargetUpdater.UpdateTargets();
+            }
+            if (!DataCenter.IsActivated())
+                return;
+
+            bool canDoAction = ActionUpdater.CanDoAction();
+            MovingUpdater.UpdateCanMove(canDoAction);
+
+            if (canDoAction)
+            {
+                RSCommands.DoAction();
+            }
+
+            MacroUpdater.UpdateMacro();
+
+            if (!autoOnEnabled)
+            {
+                TargetUpdater.UpdateTargets();
+            }
+
+            StateUpdater.UpdateState();
+
+            ActionUpdater.UpdateNextAction();
+
+            ActionSequencerUpdater.UpdateActionSequencerAction();
+        }
+        catch (Exception ex)
+        {
+            LogOnce("RSRUpdate DC Exception", ex);
+        }
+    }
+
+    private static void RSRActivatedHighlightUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle || !_isActivatedThisCycle)
+            return;
+
+        // Handle Teaching Mode Highlighting
+        if (Service.Config.TeachingMode && ActionUpdater.NextAction is not null)
+        {
+            try
+            {
+                IAction nextAction = ActionUpdater.NextAction;
+                HotbarID? hotbar = null;
+                if (nextAction is IBaseItem item)
+                {
+                    hotbar = new HotbarID(HotbarSlotType.Item, item.ID);
+                }
+                else if (nextAction is IBaseAction baseAction)
+                {
+                    hotbar = baseAction.Action.ActionCategory.RowId is 10 or 11
+                            ? GetGeneralActionHotbarID(baseAction)
+                            : new HotbarID(HotbarSlotType.Action, baseAction.AdjustedID);
+                }
+
+                if (hotbar.HasValue)
+                {
+                    _ = HotbarHighlightManager.HotbarIDs.Add(hotbar.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogOnce("UpdateHighlight Exception", ex);
+            }
+        }
+    }
+
+    private static void RSRCommonUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
+
+        try
+        {
+            // Update various combat tracking parameters,
             ActionUpdater.UpdateCombatInfo();
-            
+
             // Update timing tweaks
             ActionManagerEx.Instance.UpdateTweaks();
 
             // Update displaying the additional UI windows
             RotationSolverPlugin.UpdateDisplayWindow();
+        }
+        catch (Exception ex)
+        {
+            LogOnce("CommonUpdate Exception", ex);
+        }
+    }
 
+    private static void RSRCleanupUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
+
+        try
+        {
             // Handle system warnings
             if (DataCenter.SystemWarnings.Count > 0)
             {
                 DateTime now = DateTime.Now;
                 List<string> keysToRemove = [];
-
                 foreach (KeyValuePair<string, DateTime> kvp in DataCenter.SystemWarnings)
                 {
                     if (kvp.Value + TimeSpan.FromMinutes(10) < now)
@@ -228,7 +245,6 @@ internal static class MajorUpdater
                         keysToRemove.Add(kvp.Key);
                     }
                 }
-
                 foreach (string key in keysToRemove)
                 {
                     _ = DataCenter.SystemWarnings.Remove(key);
@@ -236,14 +252,27 @@ internal static class MajorUpdater
             }
 
             // Clear old VFX data
-            if (DataCenter.VfxDataQueue.Count > 0)
+            if (!DataCenter.VfxDataQueue.IsEmpty)
             {
                 while (DataCenter.VfxDataQueue.TryPeek(out var vfx) && vfx.TimeDuration > TimeSpan.FromSeconds(6))
                 {
                     _ = DataCenter.VfxDataQueue.TryDequeue(out _);
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            LogOnce("CleanupUpdate Exception", ex);
+        }
+    }
 
+    private static void RSRRotationAndStateUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
+
+        try
+        {
             // Change loaded rotation based on job
             RotationUpdater.UpdateRotation();
 
@@ -258,18 +287,23 @@ internal static class MajorUpdater
                 }
                 catch (Exception ex)
                 {
-                    if (_threadException != ex)
-                    {
-                        _threadException = ex;
-                        PluginLog.Error($"HotbarHighlightManager.UpdateSettings Exception: {ex.Message}");
-                        if (Service.Config.InDebug)
-                        {
-                            _ = BasicWarningHelper.AddSystemWarning("HotbarHighlightManager.UpdateSettings Exception");
-                        }
-                    }
+                    LogOnce("HotbarHighlightManager.UpdateSettings Exception", ex);
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            LogOnce("RotationAndStateUpdate Exception", ex);
+        }
+    }
 
+    private static void RSRMiscAndTargetFreelyUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
+
+        try
+        {
             MiscUpdater.UpdateMisc();
 
             if (Service.Config.TargetFreely && !DataCenter.IsPvP)
@@ -307,16 +341,16 @@ internal static class MajorUpdater
         }
         catch (Exception ex)
         {
-            if (_threadException != ex)
-            {
-                _threadException = ex;
-                PluginLog.Error($"Secondary RSRUpdate Exception: {ex.Message}");
-                if (Service.Config.InDebug)
-                {
-                    _ = BasicWarningHelper.AddSystemWarning("Secondary RSRUpdate Exception");
-                }
-            }
+            LogOnce("Secondary RSRUpdate Exception", ex);
         }
+    }
+
+    private static void RSRResetUpdate(IFramework framework)
+    {
+        if (!_shouldRunThisCycle)
+            return;
+
+        _shouldRunThisCycle = false;
     }
 
     private static HotbarID? GetGeneralActionHotbarID(IBaseAction baseAction)
@@ -338,9 +372,34 @@ internal static class MajorUpdater
         return null;
     }
 
+    private static void LogOnce(string context, Exception ex)
+    {
+        if (_threadException == ex)
+        {
+            return;
+        }
+
+        _threadException = ex;
+        PluginLog.Error($"{context}: {ex.Message}");
+        if (Service.Config.InDebug)
+        {
+            _ = BasicWarningHelper.AddSystemWarning(context);
+        }
+    }
+
     public static void Dispose()
     {
-        Svc.Framework.Update -= RSRUpdate;
+        Svc.Framework.Update -= RSRGateUpdate;
+        Svc.Framework.Update -= RSRTeachingClearUpdate;
+        Svc.Framework.Update -= RSRInvalidUpdate;
+        Svc.Framework.Update -= RSRActivatedCoreUpdate;
+        Svc.Framework.Update -= RSRActivatedHighlightUpdate;
+        Svc.Framework.Update -= RSRCommonUpdate;
+        Svc.Framework.Update -= RSRCleanupUpdate;
+        Svc.Framework.Update -= RSRRotationAndStateUpdate;
+        Svc.Framework.Update -= RSRMiscAndTargetFreelyUpdate;
+        Svc.Framework.Update -= RSRResetUpdate;
+
         MiscUpdater.Dispose();
         ActionSequencerUpdater.SaveFiles();
         ActionUpdater.ClearNextAction();

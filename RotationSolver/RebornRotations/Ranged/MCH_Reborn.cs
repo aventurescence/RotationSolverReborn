@@ -157,16 +157,17 @@ public sealed class MCH_Reborn : MachinistRotation
         {
             if (FullMetalFieldPvE.EnoughLevel)
             {
-                if ((Heat >= 50 || HasHypercharged) && !LowLevelHyperCheck)
+                if (Heat >= 50 || HasHypercharged)
                 {
-                    if (WeaponRemain < (GCDTime(1) / 2)
-                        && nextGCD.IsTheSameTo(false, FullMetalFieldPvE)
-                        && WildfirePvE.CanUse(out act))
+                    if (WeaponRemain < (GCDTime(1) / 2) && nextGCD.IsTheSameTo(false, FullMetalFieldPvE))
                     {
                         var IsTargetBoss = WildfirePvE.Target.Target?.IsBossFromIcon() ?? false;
                         if ((IsTargetBoss && WildfireBoss) || !WildfireBoss)
                         {
-                            return true;
+                            if (WildfirePvE.CanUse(out act))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -175,12 +176,15 @@ public sealed class MCH_Reborn : MachinistRotation
             {
                 if ((Heat >= 50 || HasHypercharged) && ToolChargeSoon(out _) && !LowLevelHyperCheck)
                 {
-                    if (WeaponRemain < (GCDTime(1) / 2) && WildfirePvE.CanUse(out act))
+                    if (WeaponRemain < (GCDTime(1) / 2))
                     {
                         var IsTargetBoss = WildfirePvE.Target.Target?.IsBossFromIcon() ?? false;
                         if ((IsTargetBoss && WildfireBoss) || !WildfireBoss)
                         {
-                            return true;
+                            if (WildfirePvE.CanUse(out act))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -241,22 +245,6 @@ public sealed class MCH_Reborn : MachinistRotation
     #region GCD Logic
     protected override bool GeneralGCD(out IAction? act)
     {
-        if (Player.WillStatusEndGCD(1, 0, true, StatusID.FullMetalMachinist))
-        {
-            if (FullMetalFieldPvE.CanUse(out act))
-            {
-                return true;
-            }
-        }
-
-        if (Player.WillStatusEndGCD(1, 0, true, StatusID.ExcavatorReady))
-        {
-            if (ExcavatorPvE.CanUse(out act))
-            {
-                return true;
-            }
-        }
-
         // ensure combo is not broken, okay to drop during overheat
         if (IsLastComboAction(true, SlugShotPvE) && LiveComboTime >= GCDTime(1) && LiveComboTime <= GCDTime(2) && !IsOverheated)
         {
@@ -345,21 +333,34 @@ public sealed class MCH_Reborn : MachinistRotation
             return true;
         }
 
-        if (AirAnchorPvE.Cooldown.IsCoolingDown && DrillPvE.Cooldown.CurrentCharges < 2 && ChainSawPvE.Cooldown.IsCoolingDown
-            && !HasExcavatorReady)
+        if (!AirAnchorPvE.CanUse(out _) && !ChainSawPvE.CanUse(out _) && !ExcavatorPvE.CanUse(out _) && !HasExcavatorReady
+            && !IsLastGCD(false, ChainSawPvE) && DrillPvE.Cooldown.CurrentCharges < 2)
         {
-            if (!WildfirePvE.Cooldown.IsCoolingDown || IsLastAbility(true, WildfirePvE))
+            if (FullMetalFieldPvE.CanUse(out act))
             {
-                if (FullMetalFieldPvE.CanUse(out act))
-                {
-                    return true;
-                }
+                return true;
             }
         }
 
         if (DrillPvE.CanUse(out act, usedUp: true))
         {
             return true;
+        }
+
+        if (Player.WillStatusEnd(3, true, StatusID.FullMetalMachinist))
+        {
+            if (FullMetalFieldPvE.CanUse(out act))
+            {
+                return true;
+            }
+        }
+
+        if (Player.WillStatusEnd(3, true, StatusID.ExcavatorReady))
+        {
+            if (ExcavatorPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
 
         // 1 AOE

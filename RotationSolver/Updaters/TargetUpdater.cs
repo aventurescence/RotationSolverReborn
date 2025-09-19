@@ -18,6 +18,7 @@ internal static partial class TargetUpdater
 
     internal static void UpdateTargets()
     {
+        //PluginLog.Debug("Updating targets");
         DataCenter.TargetsByRange.Clear();
         DataCenter.AllTargets = GetAllTargets();
         if (DataCenter.AllTargets != null)

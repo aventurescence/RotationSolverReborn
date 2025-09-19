@@ -98,11 +98,6 @@ public sealed class AST_Reborn : AstrologianRotation
             return act;
         }
 
-        if (remainTime is < 4 and > 3 && AspectedBeneficPvE.CanUse(out act))
-        {
-            return act;
-        }
-
         if (remainTime < UseEarthlyStarTime && EarthlyStarPvE.CanUse(out act, skipTTKCheck: true))
         {
             return act;

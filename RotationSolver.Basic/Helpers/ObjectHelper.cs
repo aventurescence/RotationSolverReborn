@@ -7,7 +7,6 @@ using ECommons.ExcelServices;
 using ECommons.GameFunctions;
 using ECommons.GameHelpers;
 using ECommons.Logging;
-using ExCSS;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
@@ -216,26 +215,26 @@ public static class ObjectHelper
             }
         }
 
-        //if (DataCenter.IsInOccultCrescentOp)
-        //{
-        //    //bool isInCE = this needs to be fixed to sort out indiicator for in CE or not 
+        /*if (DataCenter.IsInOccultCrescentOp)
+        {
+            bool isInCE = DataCenter.IsInOccultCrescentOpCE;
 
-        //    if (isInCE)
-        //    {
-        //        if (!battleChara.IsOccultCEMob())
-        //        {
-        //            return false;
-        //        }
-        //    }
+            if (isInCE)
+            {
+                if (!battleChara.IsOccultCEMob())
+                {
+                    return false;
+                }
+            }
 
-        //    if (!isInCE)
-        //    {
-        //        if (battleChara.IsOccultCEMob())
-        //        {
-        //            return false;
-        //        }
-        //    }
-        //}
+            if (!isInCE)
+            {
+                if (battleChara.IsOccultCEMob())
+                {
+                    return false;
+                }
+            }
+        }*/
 
         if (Service.Config.TargetQuestThings && battleChara.IsOthersPlayersMob())
         {
@@ -1117,7 +1116,8 @@ public static class ObjectHelper
     /// <returns>True if the target is immune due to any special mechanic; otherwise, false.</returns>
     public static bool IsSpecialImmune(this IBattleChara battleChara)
     {
-        return battleChara.IsMesoImmune()
+        return battleChara.IsLOTAImmune()
+            || battleChara.IsMesoImmune()
             || battleChara.IsJagdDollImmune()
             || battleChara.IsLyreImmune()
             || battleChara.IsDrakeImmune()
@@ -1131,6 +1131,29 @@ public static class ObjectHelper
             || battleChara.IsOmegaImmune()
             || battleChara.IsLimitlessBlue()
             || battleChara.IsHanselorGretelShielded();
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static bool IsLOTAImmune(this IBattleChara battleChara)
+    {
+        if (DataCenter.TerritoryID == 174)
+        {
+            var Thanatos = battleChara.NameId == 710;
+            var AstralRealignment = Player.Object.HasStatus(false, StatusID.AstralRealignment);
+
+            if (Thanatos && !AstralRealignment)
+            {
+                if (Service.Config.InDebug)
+                {
+                    PluginLog.Information("IsLOTAImmune status found");
+                }
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -1906,19 +1929,16 @@ public static class ObjectHelper
         DateTime startTime = DateTime.MinValue;
         float initialHpRatio = 0;
 
-        // Use a snapshot of the RecordedHP collection to avoid modification during enumeration
         (DateTime time, Dictionary<ulong, float> hpRatios)[] recordedHPCopy = [.. DataCenter.RecordedHP];
 
-        // Calculate a moving average of HP ratios
-        const int movingAverageWindow = 5; // TODO: Possibly this should be configurable?
+        const int movingAverageWindow = 5; 
         if (recordedHPCopy.Length == 0)
         {
-            return float.NaN; // No recorded HP data available
+            return float.NaN;
         }
 
         List<float> hpRatios = new(movingAverageWindow);
 
-        // We just need the first injured entry and last movingAverageWindow entries
         foreach ((DateTime time, Dictionary<ulong, float> hpRatiosDict) in recordedHPCopy)
         {
             if (hpRatiosDict != null && hpRatiosDict.TryGetValue(battleChara.GameObjectId, out float ratio) && ratio != 1)
@@ -1934,7 +1954,6 @@ public static class ObjectHelper
             return float.NaN;
         }
 
-        // Skip to just the last movingAverageWindow entries
         if (recordedHPCopy.Length > movingAverageWindow)
         {
             recordedHPCopy = recordedHPCopy[^movingAverageWindow..];
@@ -1954,7 +1973,6 @@ public static class ObjectHelper
             return float.NaN;
         }
 
-        // Manual average calculation to avoid LINQ
         float sum = 0;
         int count = 0;
         foreach (float r in hpRatios)

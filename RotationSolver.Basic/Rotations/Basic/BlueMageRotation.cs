@@ -3,8 +3,6 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using CombatRole = RotationSolver.Basic.Data.CombatRole;
 
 namespace RotationSolver.Basic.Rotations.Basic;
-
-
 public partial class BlueMageRotation
 {
     /// <summary>
@@ -154,75 +152,111 @@ public partial class BlueMageRotation
     /// </summary>
     public BlueMageRotation()
     {
-        _ = SetBlueMageActions();
+        //_ = SetBlueMageActions(); disabled for now while i figure out what is causing it to crash to desktop
     }
+
+    private uint[] _lastAppliedBluActions = Array.Empty<uint>();
 
     /// <summary>
     /// Attempts to set the actions for the Blue Mage character.
     /// </summary>
-    /// <returns>Returns <c>true</c> if the actions are successfully set; otherwise, returns <c>false</c>.</returns>
+    /// <returns>True if successfully applied or already matching; otherwise false.</returns>
     protected unsafe bool SetBlueMageActions()
     {
-        if (!Service.Config.SetBluActions)
-        {
-            return false;
-        }
-
-        if (ActiveActions.Length is > 24 or 0)
-        {
-            PluginLog.Error($"Active actions count {ActiveActions.Length} is invalid.");
-            return false;
-        }
-
         try
         {
-            // Manual filtering and projection to avoid LINQ
-            List<uint> idList = new List<uint>(ActiveActions.Length);
-            foreach (var a in ActiveActions)
+            // Config / state guards
+            if (!Service.Config.SetBluActions2) return false;
+            if (!DataCenter.PlayerAvailable()) return false;
+
+            var active = ActiveActions;
+            if (active is null || active.Length is 0 or > 24)
             {
+                PluginLog.Error($"Active actions count {active?.Length ?? 0} is invalid (must be 1 - {24}).");
+                return false;
+            }
+
+            Span<uint> unlockedIdsSpan = active.Length <= 24
+                ? stackalloc uint[active.Length]
+                : new uint[active.Length];
+
+            int count = 0;
+            foreach (var a in active)
+            {
+                if (a == null) continue;
+
                 if (a.Info.IsQuestUnlocked())
                 {
-                    idList.Add(a.Action.RowId);
+                    unlockedIdsSpan[count++] = a.Action.RowId;
                 }
             }
-            uint[] idArray = [.. idList];
 
-            if (idArray.Equals(GetBlueMageActions()))
+            if (count == 0)
             {
+                PluginLog.Warning("No unlocked Blue Mage actions from ActiveActions; skipping SetBlueMageActions.");
+                return false;
+            }
+
+            var newIds = unlockedIdsSpan[..count].ToArray();
+
+            // Compare against last applied (cache) first to avoid native calls
+            if (_lastAppliedBluActions.AsSpan().SequenceEqual(newIds))
+            {
+                return true; // Already applied by our logic
+            }
+
+            // Retrieve current in-game actions
+            var current = GetBlueMageActionsInternal();
+            if (current.AsSpan().SequenceEqual(newIds))
+            {
+                _lastAppliedBluActions = newIds;
                 return true;
             }
 
             ActionManager* actionManager = ActionManager.Instance();
-            fixed (uint* idArrayPtr = idArray)
+            if (actionManager == null)
             {
-                return actionManager->SetBlueMageActions(idArrayPtr);
+                PluginLog.Error("ActionManager instance is null; cannot set BLU actions.");
+                return false;
+            }
+
+            fixed (uint* idsPtr = newIds)
+            {
+                bool ok = actionManager->SetBlueMageActions(idsPtr);
+                if (ok)
+                {
+                    _lastAppliedBluActions = newIds;
+                }
+                else
+                {
+                    PluginLog.Warning("SetBlueMageActions native call returned false.");
+                }
+                return ok;
             }
         }
         catch (Exception ex)
         {
-            PluginLog.Error($"Failed to set BlueMage actions: {ex.Message}");
+            PluginLog.Error($"Failed to set Blue Mage actions. Exception: {ex}");
             return false;
         }
     }
 
-    private unsafe uint[] GetBlueMageActions()
+    private unsafe uint[] GetBlueMageActionsInternal()
     {
         ActionManager* actionManager = ActionManager.Instance();
-        if (actionManager == null)
-        {
-            return [];
-        }
+        if (actionManager == null) return [];
 
-        List<uint> loadedActionIds = [];
-        for (int slot = 1; slot < 24; slot++)
+        Span<uint> buffer = stackalloc uint[24];
+        int count = 0;
+        for (int slot = 0; slot < 24; slot++)
         {
-            uint loadedId = actionManager->GetActiveBlueMageActionInSlot(slot);
-            if (loadedId > 0)
+            uint id = actionManager->GetActiveBlueMageActionInSlot(slot);
+            if (id != 0)
             {
-                loadedActionIds.Add(loadedId);
+                buffer[count++] = id;
             }
         }
-        return loadedActionIds.ToArray();
+        return buffer[..count].ToArray();
     }
 
     /// <summary>

@@ -6,6 +6,10 @@ internal class ActionSequencerUpdater
 {
     private static string? _actionSequencerFolder;
 
+    // Cache: map action ID to action for the current rotation set, rebuild only when actions array ref changes.
+    private static Dictionary<uint, IAction>? _actionsByIdCache;
+    private static IAction[]? _lastActionsRef;
+
     public static void UpdateActionSequencerAction()
     {
         if (DataCenter.ConditionSets == null)
@@ -27,12 +31,19 @@ internal class ActionSequencerUpdater
             return;
         }
 
-        // Build a lookup once to avoid repeated linear scans.
-        Dictionary<uint, IAction> actionsById = [];
-        foreach (IAction a in allActions)
+        // Build or reuse a lookup dictionary of actions by ID, rebuilding only when the action array reference changes.
+        if (!ReferenceEquals(_lastActionsRef, allActions) || _actionsByIdCache == null)
         {
-            actionsById.TryAdd(a.ID, a);
+            var newMap = new Dictionary<uint, IAction>(allActions.Length);
+            for (int i = 0; i < allActions.Length; i++)
+            {
+                IAction a = allActions[i];
+                newMap.TryAdd(a.ID, a);
+            }
+            _actionsByIdCache = newMap;
+            _lastActionsRef = allActions;
         }
+        Dictionary<uint, IAction> actionsById = _actionsByIdCache;
 
         HashSet<uint> disabledActions = [];
         foreach (KeyValuePair<uint, ConditionSet> pair in set.DisableConditionDict)

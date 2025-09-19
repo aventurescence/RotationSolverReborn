@@ -322,7 +322,7 @@ public partial class MachinistRotation
     static partial void ModifyBarrelStabilizerPvE(ref ActionSetting setting)
     {
         setting.StatusProvide = [StatusID.Hypercharged, StatusID.FullMetalMachinist];
-        setting.ActionCheck = () => InCombat;
+        setting.ActionCheck = () => InCombat && !HasFullMetalMachinist;
         setting.IsFriendly = true;
     }
 
@@ -441,7 +441,7 @@ public partial class MachinistRotation
 
     static partial void ModifyExcavatorPvE(ref ActionSetting setting)
     {
-        setting.ActionCheck = () => ExcavatorPvEReady;
+        setting.ActionCheck = () => ExcavatorPvEReady || HasExcavatorReady;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,

@@ -15,11 +15,11 @@
         <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
         <Platforms>x64</Platforms>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-        <DalamudLibPath>$(AppData)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-        <DalamudLibPath>$(DALAMUD_HOME)/</DalamudLibPath>
+    <PropertyGroup>
+        <DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+        <DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('Linux'))">$(HOME)/.xlcore/dalamud/Hooks/dev/</DalamudLibPath>
+        <DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Application Support/XIV on Mac/dalamud/Hooks/dev/</DalamudLibPath>
+        <DalamudLibPath Condition="$(DALAMUD_HOME) != ''">$(DALAMUD_HOME)/</DalamudLibPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       <NoWarn></NoWarn>
@@ -75,7 +75,7 @@
         <Using Include="Dalamud.Bindings.ImGui" />
         <Using Include="Newtonsoft.Json" />
 
-        <PackageReference Include="ECommons" Version="3.0.1.14" />
+        <PackageReference Include="ECommons" Version="3.0.1.15" />
 
         <PackageReference Include="System.Drawing.Common" Version="9.0.9" />
         <ProjectReference Include="..\RotationSolver.SourceGenerators\RotationSolver.SourceGenerators.csproj" OutputItemType="Analyzer" ExcludeAssets="All" />

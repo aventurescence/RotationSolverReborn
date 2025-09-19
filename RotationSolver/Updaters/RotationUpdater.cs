@@ -4,7 +4,6 @@ using ECommons.GameHelpers;
 using ECommons.Logging;
 using Lumina.Excel.Sheets;
 using RotationSolver.Basic.Rotations.Duties;
-using RotationSolver.Data;
 using RotationSolver.Helpers;
 
 
@@ -22,58 +21,7 @@ internal static class RotationUpdater
 
     public static IAction[] CurrentRotationActions { get; private set; } = [];
 
-    private static bool _isLoading = false;
     private static string _curDutyRotationName = string.Empty;
-
-    /// <summary>
-    /// Retrieves custom rotations from built-in assemblies
-    /// </summary>
-    /// <param name="option"></param>
-    /// <returns></returns>
-    public static async Task GetAllCustomRotationsAsync()
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        _isLoading = true;
-
-        try
-        {
-            // Load only built-in rotations without DLL loading
-            LoadBuiltInRotations();
-
-            List<string> assemblies = [];
-            HashSet<string> seen = [];
-            foreach (KeyValuePair<JobRole, CustomRotationGroup[]> d in CustomRotationsDict)
-            {
-                foreach (CustomRotationGroup g in d.Value)
-                {
-                    foreach (Type r in g.Rotations)
-                    {
-                        string name = r.Assembly.FullName ?? string.Empty;
-                        if (seen.Add(name))
-                        {
-                            assemblies.Add(name);
-                        }
-                    }
-                }
-            }
-            PrintLoadedAssemblies(assemblies);
-        }
-        catch (Exception ex)
-        {
-            WarningHelper.AddSystemWarning($"Failed to load rotations because: {ex.Message}");
-            PluginLog.Error($"Failed to get custom rotations: {ex.Message}");
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-
-        await Task.CompletedTask;
-    }
 
     /// <summary>
     /// Loads custom rotation groups from the current assembly
@@ -215,19 +163,6 @@ internal static class RotationUpdater
 
         CustomRotationsLookup = []; // CustomRotations aren't disposed or we'd want to loop through and dispose them
         return [.. result];
-    }
-
-    private static void PrintLoadedAssemblies(IEnumerable<string>? assemblies)
-    {
-        if (assemblies == null)
-        {
-            return;
-        }
-
-        foreach (string assembly in assemblies)
-        {
-            Svc.Chat.Print("Loaded: " + assembly);
-        }
     }
 
     public static Type[] TryGetTypes(Assembly assembly)
