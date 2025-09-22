@@ -188,7 +188,7 @@ public sealed class SAM_Reborn : SamuraiRotation
 
         if (!HiganbanaTargets || (HiganbanaTargets && NumberOfAllHostilesInRange < 2) && HasFugetsuAndFuka && !WillFugetsuEnd && !WillFukaEnd && !HasMeikyoShisui && !MidareSetsugekkaReady)
         {
-            if (HiganbanaPvE.CanUse(out act, skipComboCheck: true, skipTTKCheck: isTargetBoss))
+            if (HiganbanaPvE.CanUse(out act, skipComboCheck: true, skipTTKCheck: isTargetBoss || IsInHighEndDuty))
             {
                 return true;
             }

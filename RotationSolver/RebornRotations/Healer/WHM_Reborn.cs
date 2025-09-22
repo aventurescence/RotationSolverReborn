@@ -248,7 +248,7 @@ public sealed class WHM_Reborn : WhiteMageRotation
     {
         if (InCombat)
         {
-            if (PresenceOfMindPvE.CanUse(out act))
+            if (PresenceOfMindPvE.CanUse(out act, skipTTKCheck: IsInHighEndDuty))
             {
                 return true;
             }

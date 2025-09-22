@@ -300,6 +300,8 @@ public partial class RotationConfigWindow : Window
             _ = diagInfo.AppendLine($"Game Language: {_cachedDiagInfo.Language}");
             _ = diagInfo.AppendLine($"Update Frequency: {Service.Config.MinUpdatingTime}");
             _ = diagInfo.AppendLine($"Intercept: {Service.Config.InterceptAction2}");
+            _ = diagInfo.AppendLine($"Player Level: {Player.Level}");
+            _ = diagInfo.AppendLine($"Player Job: {Player.Job}");
         }
 
         // Ensure that IncompatiblePlugins is not null

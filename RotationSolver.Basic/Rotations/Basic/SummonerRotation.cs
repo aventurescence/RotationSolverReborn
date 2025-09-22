@@ -780,7 +780,7 @@ public partial class SummonerRotation
 
     static partial void ModifyCrimsonCyclonePvP(ref ActionSetting setting)
     {
-        setting.SpecialType = SpecialActionType.MovingForward;
+        //setting.SpecialType = SpecialActionType.MovingForward;
         setting.StatusProvide = [StatusID.CrimsonStrikeReady_4403];
         setting.CreateConfig = () => new ActionConfig()
         {

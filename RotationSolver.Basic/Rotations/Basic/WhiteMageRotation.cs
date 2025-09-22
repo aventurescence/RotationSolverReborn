@@ -183,7 +183,7 @@ public partial class WhiteMageRotation
 
     static partial void ModifyAetherialShiftPvE(ref ActionSetting setting)
     {
-        setting.SpecialType = SpecialActionType.MovingForward;
+        //setting.SpecialType = SpecialActionType.MovingForward;
         setting.IsFriendly = true;
     }
 

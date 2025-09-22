@@ -345,23 +345,20 @@ internal static class DataCenter
     {
         get
         {
-            if (_avgTTK > 0)
-            {
-                return _avgTTK;
-            }
-            float total = 0;
+            float total = 0f;
             int count = 0;
             var targets = AllHostileTargets;
             for (int i = 0, n = targets.Count; i < n; i++)
             {
-                float tTK = targets[i].GetTTK();
-                if (!float.IsNaN(tTK))
+                float ttk = targets[i].GetTTK();
+                if (!float.IsNaN(ttk))
                 {
-                    total += tTK;
+                    total += ttk;
                     count++;
                 }
             }
-            return _avgTTK = count > 0 ? total / count : 0;
+            _avgTTK = count > 0 ? total / count : 0f;
+            return _avgTTK;
         }
     }
 
@@ -472,12 +469,6 @@ internal static class DataCenter
     /// </summary>
     public static bool IsInOccultCrescentOp => Content.ContentType == ECommons.GameHelpers.ContentType.FieldOperations
         && Territory?.ContentType == TerritoryContentType.OccultCrescent;
-    
-    /// <summary>
-    /// Determines if the current content is Occult Critical Event
-    /// </summary>
-    public static bool IsInOccultCrescentOpCE => IsInOccultCrescentOp 
-                                                  && Player.Object.HasStatus(false, StatusID.DutiesAsAssigned_4228);
 
     /// <summary>
     /// Determines if the current content is Forked Tower.

@@ -313,7 +313,7 @@ public partial class MonkRotation
 
     static partial void ModifyThunderclapPvE(ref ActionSetting setting)
     {
-        setting.SpecialType = SpecialActionType.MovingForward;
+        //setting.SpecialType = SpecialActionType.MovingForward;
         setting.UnlockedByQuestID = 66598;
         setting.IsFriendly = false;
     }

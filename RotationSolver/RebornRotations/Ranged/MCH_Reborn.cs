@@ -214,28 +214,31 @@ public sealed class MCH_Reborn : MachinistRotation
             _ => "GaussRound"
         };
 
-        switch (whichToUse)
+        if (!FullMetalFieldPvE.EnoughLevel || (FullMetalFieldPvE.EnoughLevel && !nextGCD.IsTheSameTo(false, FullMetalFieldPvE)))
         {
-            case "Ricochet":
-                if (CheckmatePvE.EnoughLevel && CheckmatePvE.CanUse(out act, usedUp: true))
-                {
-                    return true;
-                }
-                if (!CheckmatePvE.EnoughLevel && RicochetPvE.CanUse(out act, usedUp: true))
-                {
-                    return true;
-                }
-                break;
-            case "GaussRound":
-                if (DoubleCheckPvE.EnoughLevel && DoubleCheckPvE.CanUse(out act, usedUp: true))
-                {
-                    return true;
-                }
-                if (!DoubleCheckPvE.EnoughLevel && GaussRoundPvE.CanUse(out act, usedUp: true))
-                {
-                    return true;
-                }
-                break;
+            switch (whichToUse)
+            {
+                case "Ricochet":
+                    if (CheckmatePvE.EnoughLevel && CheckmatePvE.CanUse(out act, usedUp: IsBurst || IsOverheated))
+                    {
+                        return true;
+                    }
+                    if (!CheckmatePvE.EnoughLevel && RicochetPvE.CanUse(out act, usedUp: IsBurst || IsOverheated))
+                    {
+                        return true;
+                    }
+                    break;
+                case "GaussRound":
+                    if (DoubleCheckPvE.EnoughLevel && DoubleCheckPvE.CanUse(out act, usedUp: IsBurst || IsOverheated))
+                    {
+                        return true;
+                    }
+                    if (!DoubleCheckPvE.EnoughLevel && GaussRoundPvE.CanUse(out act, usedUp: IsBurst || IsOverheated))
+                    {
+                        return true;
+                    }
+                    break;
+            }
         }
 
         return base.AttackAbility(nextGCD, out act);
@@ -334,7 +337,7 @@ public sealed class MCH_Reborn : MachinistRotation
         }
 
         if (!AirAnchorPvE.CanUse(out _) && !ChainSawPvE.CanUse(out _) && !ExcavatorPvE.CanUse(out _) && !HasExcavatorReady
-            && !IsLastGCD(false, ChainSawPvE) && DrillPvE.Cooldown.CurrentCharges < 2)
+            && !IsLastGCD(false, ChainSawPvE) && DrillPvE.Cooldown.CurrentCharges < 2 && (!WildfirePvE.Cooldown.IsCoolingDown || IsLastAction(false, WildfirePvE)))
         {
             if (FullMetalFieldPvE.CanUse(out act))
             {

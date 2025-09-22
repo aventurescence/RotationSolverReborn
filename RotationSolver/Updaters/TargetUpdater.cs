@@ -339,15 +339,19 @@ internal static partial class TargetUpdater
                 }
             }
 
-            if (!CanDispelNonDangerous)
+            // Allow non-dangerous dispels when either we're in a safe context or explicitly configured to do so.
+            bool allowNonDangerous = CanDispelNonDangerous
+                                     || !DataCenter.HasHostilesInRange
+                                     || Service.Config.DispelAll
+                                     || DataCenter.IsPvP;
+
+            IBattleChara? dangerousTarget = GetClosestTarget(dyingPeople);
+            if (!allowNonDangerous)
             {
-                return GetClosestTarget(dyingPeople);
+                return dangerousTarget;
             }
 
-            if (CanDispelNonDangerous || !DataCenter.HasHostilesInRange || Service.Config.DispelAll || DataCenter.IsPvP)
-            {
-                return GetClosestTarget(dyingPeople) ?? GetClosestTarget(delayedWeakenPeople);
-            }
+            return dangerousTarget ?? GetClosestTarget(delayedWeakenPeople);
         }
         return null;
     }
@@ -413,15 +417,22 @@ internal static partial class TargetUpdater
 
         _lastUpdateTimeToKill = now;
 
+        var hostiles = DataCenter.AllHostileTargets;
+        if (hostiles == null || hostiles.Count == 0)
+        {
+            return;
+        }
+
         if (DataCenter.RecordedHP.Count >= DataCenter.HP_RECORD_TIME)
         {
             _ = DataCenter.RecordedHP.Dequeue();
         }
 
-        Dictionary<ulong, float> currentHPs = [];
-        foreach (IBattleChara target in DataCenter.AllHostileTargets)
+        Dictionary<ulong, float> currentHPs = new(hostiles.Count);
+        for (int i = 0; i < hostiles.Count; i++)
         {
-            if (target.CurrentHp != 0)
+            var target = hostiles[i];
+            if (target != null && target.CurrentHp != 0)
             {
                 currentHPs[target.GameObjectId] = target.GetHealthRatio();
             }

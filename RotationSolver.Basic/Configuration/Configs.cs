@@ -43,31 +43,31 @@ internal partial class Configs : IPluginConfiguration
     public MacroInfo DutyStart { get; set; } = new MacroInfo();
     public MacroInfo DutyEnd { get; set; } = new MacroInfo();
 
-    [ConditionBool, UI("Intercept player input and queue it for RSR to execute the action. (Experimental, PvE only at the moment)",
+    [ConditionBool, UI("Intercept player input and queue it for RSR to execute the action. (PvE only)",
     Filter = AutoActionUsage, Section = 5)]
     private static readonly bool _interceptAction2 = false;
 
-    [ConditionBool, UI("Allow intercepting Spells. (Experimental)",
+    [ConditionBool, UI("Allow intercepting Spells.",
     Filter = AutoActionUsage, Section = 5, Parent = nameof(InterceptAction2))]
     private static readonly bool _interceptSpell2 = false;
 
-    [ConditionBool, UI("Allow intercepting Weaponskills. (Experimental)",
+    [ConditionBool, UI("Allow intercepting Weaponskills.",
     Filter = AutoActionUsage, Section = 5, Parent = nameof(InterceptAction2))]
     private static readonly bool _interceptWeaponskill2 = false;
 
-    [ConditionBool, UI("Allow intercepting Abilities. (Experimental)",
+    [ConditionBool, UI("Allow intercepting Abilities.",
     Filter = AutoActionUsage, Section = 5, Parent = nameof(InterceptAction2))]
     private static readonly bool _interceptAbility2 = false;
 
-    [ConditionBool, UI("Allow intercepting actions in macros. (Experimental)",
+    [ConditionBool, UI("Allow intercepting actions in macros.",
     Filter = AutoActionUsage, Section = 5, Parent = nameof(InterceptAction2))]
     private static readonly bool _interceptMacro = false;
 
-    [ConditionBool, UI("Allow intercepting actions that are currently on cooldown. (Experimental)",
+    [ConditionBool, UI("Allow intercepting actions that are currently on cooldown.",
     Filter = AutoActionUsage, Section = 5, Parent = nameof(InterceptAction2))]
     private static readonly bool _interceptCooldown = false;
 
-    [UI("Intercepted action execution window",
+    [UI("Intercepted action execution window (amount of time RSR is allowed to attempt to use an action after it has been intercepted)",
     Filter = AutoActionUsage, Section = 5)]
     [Range(1, 10, ConfigUnitType.Seconds)]
     public float InterceptActionTime { get; set; } = 5;

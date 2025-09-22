@@ -85,7 +85,7 @@ namespace RotationSolver.Updaters
                             {
                                 PluginLog.Debug($"[ActionQueueManager] Matching action decided: {matchingAction.Name} (ID: {matchingAction.ID}, AdjustedID: {matchingAction.AdjustedID})");
 
-                                if (matchingAction.IsIntercepted)
+                                if (matchingAction.IsIntercepted && ((ActionUpdater.NextAction != null && matchingAction != ActionUpdater.NextAction) || ActionUpdater.NextAction == null))
                                 {
                                     if (!matchingAction.EnoughLevel)
                                     {

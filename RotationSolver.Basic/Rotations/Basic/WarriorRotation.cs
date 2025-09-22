@@ -242,7 +242,7 @@ public partial class WarriorRotation
 
     static partial void ModifyOnslaughtPvE(ref ActionSetting setting)
     {
-        setting.SpecialType = SpecialActionType.MovingForward;
+        //setting.SpecialType = SpecialActionType.MovingForward;
     }
 
     static partial void ModifyUpheavalPvE(ref ActionSetting setting)

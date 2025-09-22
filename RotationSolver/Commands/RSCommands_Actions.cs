@@ -300,7 +300,7 @@ namespace RotationSolver.Commands
                     
                 }
 
-                if ((Service.Config.StartOnAllianceIsInCombat && !DataCenter.State && DataCenter.AllianceMembers.Count > 1)  && !(DataCenter.IsInBozjanFieldOp || DataCenter.IsInBozjanFieldOpCE || DataCenter.IsInOccultCrescentOp || DataCenter.IsInOccultCrescentOpCE))
+                if ((Service.Config.StartOnAllianceIsInCombat && !DataCenter.State && DataCenter.AllianceMembers.Count > 1)  && !(DataCenter.IsInBozjanFieldOp || DataCenter.IsInBozjanFieldOpCE || DataCenter.IsInOccultCrescentOp))
                 {
                     foreach (var a in DataCenter.AllianceMembers)
                     {
@@ -321,7 +321,7 @@ namespace RotationSolver.Commands
                     }
                 }
 
-                if (Service.Config.StartOnFieldOpInCombat && !DataCenter.State && (DataCenter.IsInBozjanFieldOp || DataCenter.IsInBozjanFieldOpCE || DataCenter.IsInOccultCrescentOp || DataCenter.IsInOccultCrescentOpCE))
+                if (Service.Config.StartOnFieldOpInCombat && !DataCenter.State && (DataCenter.IsInBozjanFieldOp || DataCenter.IsInBozjanFieldOpCE || DataCenter.IsInOccultCrescentOp))
                 {
                     foreach (var t in TargetHelper.GetTargetsByRange(30f))
                     {

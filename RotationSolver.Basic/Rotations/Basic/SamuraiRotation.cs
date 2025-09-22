@@ -352,7 +352,7 @@ public partial class SamuraiRotation
 
     static partial void ModifyHissatsuGyotenPvE(ref ActionSetting setting)
     {
-        setting.SpecialType = SpecialActionType.MovingForward;
+        //setting.SpecialType = SpecialActionType.MovingForward;
         setting.ActionCheck = () => Kenki >= 10;
         setting.CreateConfig = () => new ActionConfig()
         {
