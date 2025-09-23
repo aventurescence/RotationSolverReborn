@@ -368,9 +368,12 @@ public sealed class SGE_Reborn : SageRotation
     [RotationDesc(ActionID.KardiaPvE, ActionID.RhizomataPvE, ActionID.SoteriaPvE)]
     protected override bool GeneralAbility(IAction nextGCD, out IAction? act)
     {
-        if (KardiaPvE.CanUse(out act))
+        if (InCombat || (!InCombat && !HasKardia))
         {
-            return true;
+            if (KardiaPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
 
         if (OOCRhizomata && !InCombat && Addersgall <= 1 && RhizomataPvE.CanUse(out act))

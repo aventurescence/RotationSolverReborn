@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace RotationSolver.ExtraRotations.Magical;
 [Rotation("Rabbs Blackest Mage", CombatType.PvE, GameVersion = "7.3")]
-[SourceCode(Path = "main/RebornRotations/Magical/Rabbs_BLM.cs")]
+[SourceCode(Path = "main/ExtraRotations/Magical/Rabbs_BLM.cs")]
 [ExtraRotation]
 
 public sealed class Rabbs_BLM : BlackMageRotation

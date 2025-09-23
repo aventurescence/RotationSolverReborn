@@ -291,12 +291,9 @@ public static class StatusHelper
     }
 
     /// <summary>
-    /// Get the remaining time of the status.
+    /// Get the remaining time of the status (raw remaining time of the earliest matching status). Returns 0 if none.
+    /// NOTE: Previously this subtracted DefaultGCDRemain which caused premature refresh decisions.
     /// </summary>
-    /// <param name="battleChara"></param>
-    /// <param name="isFromSelf"></param>
-    /// <param name="statusIDs"></param>
-    /// <returns></returns>
     public static float StatusTime(this IBattleChara battleChara, bool isFromSelf, params StatusID[] statusIDs)
     {
         try
@@ -315,10 +312,10 @@ public static class StatusHelper
                 {
                     min = t;
                 }
-
                 found = true;
             }
-            return !found ? 0f : Math.Max(0f, min - DataCenter.DefaultGCDRemain);
+            // Return 0 when not found (legacy behaviour expected by callers), otherwise raw remaining time.
+            return !found ? 0f : min;
         }
         catch (Exception ex)
         {
@@ -331,7 +328,7 @@ public static class StatusHelper
     {
         foreach (Status status in battleChara.GetStatus(isFromSelf, statusIDs))
         {
-            yield return status.RemainingTime == 0 ? float.MaxValue : status.RemainingTime;
+            yield return status.RemainingTime == 0f ? float.MaxValue : status.RemainingTime;
         }
     }
 

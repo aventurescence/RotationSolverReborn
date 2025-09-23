@@ -501,6 +501,7 @@ public partial class AstrologianRotation
         setting.StatusNeed = [StatusID.Suntouched];
         setting.MPOverride = () => 0;
         setting.IsFriendly = true;
+        setting.TargetType = TargetType.Self;
         setting.CreateConfig = () => new ActionConfig()
         {
             AoeCount = 1,

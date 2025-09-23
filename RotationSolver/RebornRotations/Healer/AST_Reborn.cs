@@ -85,6 +85,17 @@ public sealed class AST_Reborn : AstrologianRotation
 
     private static bool InBurstStatus => HasDivination;
 
+    #region Tracking Properties
+    public override void DisplayRotationStatus()
+    {
+        ImGui.Text($"Suntouched 1: {Player.WillStatusEndGCD(1, 0, true, StatusID.Suntouched)}");
+        ImGui.Text($"Suntouched 2: {Player.WillStatusEndGCD(2, 0, true, StatusID.Suntouched)}");
+        ImGui.Text($"Suntouched 3: {Player.WillStatusEndGCD(3, 0, true, StatusID.Suntouched)}");
+        ImGui.Text($"Suntouched 4: {Player.WillStatusEndGCD(4, 0, true, StatusID.Suntouched)}");
+        ImGui.Text($"Suntouched Time: {Player.StatusTime(true, StatusID.Suntouched)}");
+    }
+    #endregion
+
     #region Countdown Logic
     protected override IAction? CountDownAction(float remainTime)
     {
@@ -337,9 +348,9 @@ public sealed class AST_Reborn : AstrologianRotation
             return false;
         }
 
-        if (Player.WillStatusEnd(5, true, StatusID.Suntouched))
+        if (Player.HasStatus(true, StatusID.Suntouched) && Player.WillStatusEndGCD(3, 0, true, StatusID.Suntouched))
         {
-            if (SunSignPvE.CanUse(out act))
+            if (SunSignPvE.CanUse(out act, skipAoeCheck: true, skipTTKCheck: true))
             {
                 return true;
             }

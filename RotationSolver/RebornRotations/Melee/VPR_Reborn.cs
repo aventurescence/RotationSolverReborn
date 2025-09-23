@@ -373,6 +373,7 @@ public sealed class VPR_Reborn : ViperRotation
                         break;
                     case "Equal":
                     case null:
+                    default:
                         if (HuntersDenPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true, skipAoeCheck: true))
                             return true;
                         if (SwiftskinsDenPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true, skipAoeCheck: true))
@@ -463,6 +464,8 @@ public sealed class VPR_Reborn : ViperRotation
                             return true;
                         break;
                     case "Equal":
+                    case null:
+                    default:
                         if (SwiftskinsBitePvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
                             return true;
                         break;
@@ -562,6 +565,7 @@ public sealed class VPR_Reborn : ViperRotation
                         break;
                     case "Equal":
                     case null:
+                    default:
                         if (HuntersCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
                             return true;
                         if (SwiftskinsCoilPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
@@ -705,6 +709,8 @@ public sealed class VPR_Reborn : ViperRotation
                                 return true;
                             break;
                         case "Equal":
+                        case null:
+                        default:
                             if (SwiftskinsStingPvE.CanUse(out act, skipStatusProvideCheck: true, skipComboCheck: true))
                                 return true;
                             break;
