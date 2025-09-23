@@ -37,7 +37,7 @@ public sealed class ChurinDNC : DancerRotation
     #region Conditionals
     private bool ShouldUseTechStep => TechnicalStepPvE.IsEnabled && MergedStatus.HasFlag(AutoStatus.Burst);
     private bool ShouldUseStandardStep => StandardStepPvE.IsEnabled && !HasLastDance;
-    private static bool CanWeave => WeaponRemain >= AnimationLock;
+    private static bool CanWeave => WeaponRemain < 2.5 && WeaponRemain >= AnimationLock;
 
     private bool CanUseTechnicalStep
     {
@@ -107,7 +107,6 @@ public sealed class ChurinDNC : DancerRotation
     private bool HoldStandardStepOnly => StandardHoldStrategy == HoldStandardStrategy.HoldStandardStepOnly && !HasFinishingMove;
     private bool HoldStandardFinishOnly => StandardHoldStrategy == HoldStandardStrategy.HoldStandardFinishOnly;
     private bool HoldStandardStepAndFinish => StandardHoldStrategy == HoldStandardStrategy.HoldStandardStepAndFinish;
-
     private bool DontHoldStandard => StandardHoldStrategy == HoldStandardStrategy.DontHoldStandardStepAndFinish;
 
     #endregion

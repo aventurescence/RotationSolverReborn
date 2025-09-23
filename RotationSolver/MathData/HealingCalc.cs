@@ -7,18 +7,82 @@ using XIVCalc;
 using XIVCalc.Calculations;
 using XIVCalc.Interfaces;
 using XIVCalc.Jobs;
-using System;
 
 namespace RotationSolver.MathData;
 
+/// <summary>
+/// Provides methods for calculating healing, damage, and HoT values for FFXIV jobs based on stat blocks and game formulas.
+/// </summary>
 public class HealingCalc
 {
     private static (uint Ilvl, int Dmg)? _cachedIlvl;
+    private static bool _loggedStatsInfo;
+    private static bool _loggedResults;
+    private static bool _loggedBaseHeal;
+    private static int _lastLoggedStatHash;
 
-    // Return tuple: AvgDamage, NormalDamage, CritDamage, AvgHeal, NormalHeal, CritHeal,
-    // AvgHot, NormalHot, HotMin, HotMid, HotMax, CritHot
+    // Last calculated values (private backing fields)
+
+    /// <summary>
+    /// Gets the last calculated average damage value.
+    /// </summary>
+    public static double LastAvgDamage { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated normal (non-crit) damage value.
+    /// </summary>
+    public static double LastNormalDamage { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated critical damage value.
+    /// </summary>
+    public static double LastCritDamage { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated average healed value.
+    /// </summary>
+    public static double LastAvgHeal { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated normal (non-crit) heal value.
+    /// </summary>
+    public static double LastNormalHeal { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated critical healing value.
+    /// </summary>
+    public static double LastCritHeal { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated average HoT value.
+    /// </summary>
+    public static double LastAvgHot { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated normal (non-crit) HoT value.
+    /// </summary>
+    public static double LastNormalHot { get; private set; }
+
+    /// <summary>
+    /// Gets the last calculated critical HoT value.
+    /// </summary>
+    public static double LastCritHot { get; private set; }
+
+    /// <summary>
+    /// Calculates expected output values (damage, heal, HoT) for the given player state and job.
+    /// </summary>
+    /// <param name="uiState">Pointer to the UIState struct.</param>
+    /// <param name="jobId">The job to calculate for.</param>
+    /// <param name="det">Determination stat override.</param>
+    /// <param name="critMult">Critical multiplier override.</param>
+    /// <param name="critRate">Critical rate override.</param>
+    /// <param name="dh">Direct hit stat override.</param>
+    /// <param name="ten">Tenacity stat override.</param>
+    /// <param name="ilvlSync">Item level sync value.</param>
+    /// <param name="ilvlSyncType">Item level sync type.</param>
+    /// <returns>Tuple of (AvgDamage, NormalDamage, CritDamage, AvgHeal, NormalHeal, CritHeal, AvgHot, NormalHot, CritHot).</returns>
     public static unsafe (double AvgDamage, double NormalDamage, double CritDamage, double AvgHeal, double NormalHeal,
-        double CritHeal, double AvgHot, double NormalHot, double HotMin, double HotMid, double HotMax, double CritHot)
+        double CritHeal, double AvgHot, double NormalHot, double CritHot)
         CalcExpectedOutput(UIState* uiState, Job jobId, double det, double critMult, double critRate,
             double dh, double ten, uint? ilvlSync, IlvlSyncType ilvlSyncType)
     {
@@ -27,202 +91,315 @@ public class HealingCalc
             var lvl = uiState->PlayerState.CurrentLevel;
             var attrs = uiState->PlayerState.Attributes;
 
-            var inventoryExcelData = (ushort*)((IntPtr)InventoryManager.Instance() + 9360);
-            var weaponBaseDamage = inventoryExcelData[jobId.IsCaster() ? 21 : 20] + inventoryExcelData[33];
-            if (ilvlSync != null && (inventoryExcelData[39] > lvl || ilvlSyncType == IlvlSyncType.Strict))
-            {
-                if (_cachedIlvl?.Ilvl != ilvlSync)
-                    _cachedIlvl = (ilvlSync.Value, Svc.Data.GetExcelSheet<ItemLevel>().GetRow(ilvlSync.Value).PhysicalDamage);
-                weaponBaseDamage = Math.Min(_cachedIlvl.Value.Dmg, weaponBaseDamage);
-            }
-            var weaponDamageInt = weaponBaseDamage;
-
-            int? critOverride = null;
-            if (!double.IsNaN(critMult) && critMult > 10)
-            {
-                critOverride = Convert.ToInt32(critMult);
-            }
-            else
-            {
-                try
-                {
-                    if (critRate is > 0 and <= 1)
-                    {
-                        var sub = LevelTable.SUB(lvl);
-                        var div = LevelTable.DIV(lvl);
-                        var estimate = ((critRate * 1000d) - 50d) * div / 200d + sub;
-                        var estInt = (int)Math.Round(estimate);
-                        var bestErr = double.MaxValue;
-                        var best = Math.Max(0, estInt);
-                        for (var c = Math.Max(0, estInt - 5); c <= estInt + 5; c++)
-                        {
-                            var cr = StatEquations.CritChance(c, lvl);
-                            var err = Math.Abs(cr - critRate);
-                            if (err < bestErr)
-                            {
-                                bestErr = err;
-                                best = c;
-                            }
-                        }
-
-                        critOverride = best;
-                    }
-                }
-                catch
-                {
-                    /* fall back to using UI stat if inversion fails */
-                }
-            }
-
-            int? detOverride = double.IsNaN(det) ? null : Convert.ToInt32(det);
-            int? dhOverride = double.IsNaN(dh) ? null : Convert.ToInt32(dh);
-            int? tenOverride = double.IsNaN(ten) ? null : Convert.ToInt32(ten);
-
+            var weaponDamageInt = GetWeaponBaseDamage(jobId, ilvlSync, ilvlSyncType, lvl);
+            var (critOverride, detOverride, dhOverride, tenOverride) = GetStatOverrides(lvl, critMult, critRate, det, dh, ten);
             var attrsArr = attrs.ToArray();
             var statBlock = new UiStateStatBlock(lvl, weaponDamageInt, jobId, attrsArr, detOverride, critOverride, dhOverride, tenOverride);
             var eq = new StatBlockEquations(statBlock);
 
-            try
-            {
-                PluginLog.Information(
-                    $"[CalcExpectedOutput] Level={lvl} Job={jobId} MainStat={statBlock.Mind} WeaponDamage={statBlock.WeaponDamage}");
-                PluginLog.Information(
-                    $"[CalcExpectedOutput] CriticalHitStat={statBlock.CriticalHit} CritChance={eq.CritChance():P2} CritDamage={eq.CritDamage():P0}");
-                PluginLog.Information(
-                    $"[CalcExpectedOutput] DeterminationStat={statBlock.Determination} DeterminationMultiplier={eq.DeterminationMultiplier():P4}");
-                PluginLog.Information(
-                    $"[CalcExpectedOutput] DirectHitStat={statBlock.DirectHit} DirectHitChance={eq.DirectHitChance():P2}");
-                PluginLog.Information(
-                    $"[CalcExpectedOutput] TenacityStat={statBlock.Tenacity} TenacityOffensive={eq.TenacityOffensiveModifier():P4}");
-                PluginLog.Information(
-                    $"[CalcExpectedOutput] WeaponDamageMultiplier={eq.WeaponDamageMultiplier():F4} MainStatMultiplier={eq.MainStatMultiplier():F4} Trait={eq.GetTraitModifier():F4}");
-            }
-            catch
-            {
-                // ignored
-            }
+            ResetLogGuardsIfNeeded(jobId, statBlock);
+            LogStatsInfo(eq, statBlock, lvl, jobId);
 
             const int potency = 100;
-            var normalDamage = Math.Floor(eq.BaseDamage(potency));
-            var avgDamage = Math.Floor(eq.AverageSkillDamage(potency));
-            var critMultiplier = (critMult > 0) ? critMult : eq.CritDamage();
-            var critDamage = Math.Floor(normalDamage * critMultiplier);
+            var (normalDamage, avgDamage, critDamage) = CalculateDamage(eq, potency, critMult);
+            var (normalHeal, avgHeal, critHeal) = CalculateHeal(eq, statBlock, potency, critMult, critRate);
+            var (normalHot, avgHot, critHot) = CalculateHot(eq, statBlock, potency, critMult, critRate);
 
-            // For healing
-            var normalHeal = Math.Floor(BaseHeal());
-            var avgHeal = Math.Floor(AverageHeal());
-            var critHeal = Math.Floor(normalHeal * critMultiplier);
+            LogResults(normalHeal, avgHeal, critHeal, critMult, statBlock, eq);
 
-            // HoT calculations (deterministic min/mid/max)
-            double ComputeHotForRoll(int roll)
-            {
-                var hmp = eq.MainStatMultiplier();
-                var detm = eq.DeterminationMultiplier();
-                var tnc = eq.TenacityOffensiveModifier();
-                var spd = StatEquations.HotMultiplier(statBlock.SpellSpeed, statBlock.Level);
-                var wd = statBlock.WeaponDamage;
-                var trait = eq.GetTraitModifier();
+            // Store last-calculated values
+            LastAvgDamage = avgDamage;
+            LastNormalDamage = normalDamage;
+            LastCritDamage = critDamage;
+            LastAvgHeal = avgHeal;
+            LastNormalHeal = normalHeal;
+            LastCritHeal = critHeal;
+            LastAvgHot = avgHot;
+            LastNormalHot = normalHot;
+            LastCritHot = critHot;
 
-                var h1 = Math.Floor(potency * hmp * detm);
-                h1 = Math.Floor(h1 / 100.0);
-
-                var h2 = Math.Floor(h1 * tnc);
-                h2 = Math.Floor(h2 / 100.0);
-
-                h2 = Math.Floor(h2 * spd);
-                h2 = Math.Floor(h2 / 100.0);
-
-                h2 = Math.Floor(h2 * wd);
-                h2 = Math.Floor(h2 / 100.0);
-
-                h2 = Math.Floor(h2 * trait);
-                h2 = Math.Floor(h2 / 100.0);
-
-                var outv = Math.Floor(h2 * roll / 100.0);
-                return outv;
-            }
-
-            double baseHotMin = 0, baseHotMid = 0, baseHotMax = 0;
-            double normalHot = 0, avgHot = 0, critHot = 0;
-            try
-            {
-                baseHotMin = ComputeHotForRoll(97);
-                baseHotMid = ComputeHotForRoll(100);
-                baseHotMax = ComputeHotForRoll(103);
-
-                normalHot = Math.Floor(baseHotMid);
-                var critPre = Math.Floor(baseHotMid * eq.CritDamage());
-                critHot = Math.Floor(critPre / 1000.0);
-                var cr = (critRate is > 0 and <= 1) ? critRate : eq.CritChance();
-                avgHot = Math.Floor(10 * ((1 - cr) * normalHot + cr * critHot)) / 10.0;
-
-                PluginLog.Information(
-                    $"[HealingCalc.HoT] min={baseHotMin} mid={baseHotMid} max={baseHotMax} normalMid={normalHot} avgHot={avgHot} critMid={critHot}");
-            }
-            catch
-            {
-                // ignore logging failures
-            }
-
-            try
-            {
-                PluginLog.Information(
-                    $"[HealingCalc.Result] normalHeal={normalHeal} avgHeal={avgHeal} critHeal={critHeal} critMultiplier={critMultiplier:F4}");
-                if (normalHeal == 0)
-                {
-                    PluginLog.Warning(
-                        $"[HealingCalc.ZeroHeal] normalHeal==0. Stats: Mind={statBlock.Mind} HealingMagicPotency={statBlock.HealingMagicPotency} Determination={statBlock.Determination} WeaponDamage={statBlock.WeaponDamage}");
-                    PluginLog.Warning(
-                        $"[HealingCalc.ZeroHeal] Multipliers: MainStat={eq.MainStatMultiplier():F6} Determination={eq.DeterminationMultiplier():F6} WeaponDamageMult={eq.WeaponDamageMultiplier():F6} Trait={eq.GetTraitModifier():F6}");
-                }
-            }
-            catch
-            {
-                // ignore logging failures
-            }
-
-            // Return tuple including HoT min/mid/max
-            return (avgDamage, normalDamage, critDamage, avgHeal, normalHeal, critHeal, avgHot, normalHot, baseHotMin, baseHotMid, baseHotMax, critHot);
-
-            // Local helpers
-            double AverageHeal()
-            {
-                var baseHeal = BaseHeal();
-                return Math.Floor(10 * baseHeal * (1 + (critMult - 1) * critRate)) / 10;
-            }
-
-            double BaseHeal()
-            {
-                var hmpMulti = eq.MainStatMultiplier();
-                var detMulti = eq.DeterminationMultiplier();
-
-                var h1 = Math.Floor(potency * hmpMulti * detMulti);
-                h1 = Math.Floor(h1 / 100.0);
-                var h2 = Math.Floor(h1 * statBlock.WeaponDamage);
-                var h3 = Math.Floor(h2 * eq.GetTraitModifier());
-
-                // Deterministic midpoint roll
-                const int rand = 100;
-                var h = Math.Floor(h3 * rand / 100.0);
-
-                try
-                {
-                    PluginLog.Information(
-                        $"[HealingCalc.BaseHeal] int H1={h1} H2={h2} H3={h3} deterministicRoll={rand} final={h} (trait={eq.GetTraitModifier():F4})");
-                }
-                catch
-                {
-                    // ignore
-                }
-
-                return h;
-            }
+            return (avgDamage, normalDamage, critDamage, avgHeal, normalHeal, critHeal, avgHot, normalHot, critHot);
         }
         catch (Exception e)
         {
             PluginLog.Warning($"Failed to calculate raw damage:{e}");
-            return (0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d);
+            return (0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d, 0d);
         }
+    }
+
+    /// <summary>
+    /// Calculates the average heal for a given potency.
+    /// </summary>
+    /// <param name="uiState">Pointer to the UIState struct.</param>
+    /// <param name="jobId">The job to calculate for.</param>
+    /// <param name="potency">The heal potency.</param>
+    /// <param name="det">Determination stat override.</param>
+    /// <param name="critMult">Critical multiplier override.</param>
+    /// <param name="critRate">Critical rate override.</param>
+    /// <param name="dh">Direct hit stat override.</param>
+    /// <param name="ten">Tenacity stat override.</param>
+    /// <param name="ilvlSync">Item level sync value.</param>
+    /// <param name="ilvlSyncType">Item level sync type.</param>
+    /// <returns>Average heal value for the given potency.</returns>
+    public static unsafe double CalcAverageHealForPotency(UIState* uiState, Job jobId, int potency, double det, double critMult, double critRate,
+        double dh, double ten, uint? ilvlSync, IlvlSyncType ilvlSyncType)
+    {
+        try
+        {
+            var lvl = uiState->PlayerState.CurrentLevel;
+            var attrs = uiState->PlayerState.Attributes;
+
+            var weaponDamageInt = GetWeaponBaseDamage(jobId, ilvlSync, ilvlSyncType, lvl);
+            var (critOverride, detOverride, dhOverride, tenOverride) = GetStatOverrides(lvl, critMult, critRate, det, dh, ten);
+            var attrsArr = attrs.ToArray();
+            var statBlock = new UiStateStatBlock(lvl, weaponDamageInt, jobId, attrsArr, detOverride, critOverride, dhOverride, tenOverride);
+            var eq = new StatBlockEquations(statBlock);
+
+            var (_, avgHeal, _) = CalculateHeal(eq, statBlock, potency, critMult, critRate);
+            return avgHeal;
+        }
+        catch (Exception e)
+        {
+            PluginLog.Warning($"Failed to calculate average heal for potency {potency}: {e}");
+            return 0d;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the base heal for a given potency.
+    /// </summary>
+    /// <param name="uiState">Pointer to the UIState struct.</param>
+    /// <param name="jobId">The job to calculate for.</param>
+    /// <param name="potency">The heal potency.</param>
+    /// <param name="det">Determination stat override.</param>
+    /// <param name="critMult">Critical multiplier override.</param>
+    /// <param name="critRate">Critical rate override.</param>
+    /// <param name="dh">Direct hit stat override.</param>
+    /// <param name="ten">Tenacity stat override.</param>
+    /// <param name="ilvlSync">Item level sync value.</param>
+    /// <param name="ilvlSyncType">Item level sync type.</param>
+    /// <returns>Base heal value for the given potency.</returns>
+    public static unsafe double BaseHealCalculation(UIState* uiState, Job jobId, int potency, double det, double critMult, double critRate,
+        double dh, double ten, uint? ilvlSync, IlvlSyncType ilvlSyncType)
+    {
+        try
+        {
+            var lvl = uiState->PlayerState.CurrentLevel;
+            var attrs = uiState->PlayerState.Attributes;
+
+            var weaponDamageInt = GetWeaponBaseDamage(jobId, ilvlSync, ilvlSyncType, lvl);
+            var (critOverride, detOverride, dhOverride, tenOverride) = GetStatOverrides(lvl, critMult, critRate, det, dh, ten);
+            var attrsArr = attrs.ToArray();
+            var statBlock = new UiStateStatBlock(lvl, weaponDamageInt, jobId, attrsArr, detOverride, critOverride, dhOverride, tenOverride);
+            var eq = new StatBlockEquations(statBlock);
+
+            var baseHeal = BaseHeal(eq, statBlock, potency);
+            return baseHeal;
+        }
+        catch (Exception e)
+        {
+            PluginLog.Warning($"Failed to calculate base heal for potency {potency}: {e}");
+            return 0d;
+        }
+    }
+
+    private static unsafe int GetWeaponBaseDamage(Job jobId, uint? ilvlSync, IlvlSyncType ilvlSyncType, int lvl)
+    {
+        var inventoryExcelData = (ushort*)((IntPtr)InventoryManager.Instance() + 9360);
+        var weaponBaseDamage = inventoryExcelData[jobId.IsCaster() ? 21 : 20] + inventoryExcelData[33];
+        if (ilvlSync != null && (inventoryExcelData[39] > lvl || ilvlSyncType == IlvlSyncType.Strict))
+        {
+            if (_cachedIlvl?.Ilvl != ilvlSync)
+                _cachedIlvl = (ilvlSync.Value, Svc.Data.GetExcelSheet<ItemLevel>().GetRow(ilvlSync.Value).PhysicalDamage);
+            weaponBaseDamage = Math.Min(_cachedIlvl.Value.Dmg, weaponBaseDamage);
+        }
+        return weaponBaseDamage;
+    }
+
+    private static (int? critOverride, int? detOverride, int? dhOverride, int? tenOverride) GetStatOverrides(int lvl, double critMult, double critRate, double det, double dh, double ten)
+    {
+        int? critOverride = null;
+        if (!double.IsNaN(critMult) && critMult > 10)
+        {
+            critOverride = Convert.ToInt32(critMult);
+        }
+        else
+        {
+            try
+            {
+                if (critRate is > 0 and <= 1)
+                {
+                    var sub = LevelTable.SUB(lvl);
+                    var div = LevelTable.DIV(lvl);
+                    var estimate = ((critRate * 1000d) - 50d) * div / 200d + sub;
+                    var estInt = (int)Math.Round(estimate);
+                    var bestErr = double.MaxValue;
+                    var best = Math.Max(0, estInt);
+                    for (var c = Math.Max(0, estInt - 5); c <= estInt + 5; c++)
+                    {
+                        var cr = StatEquations.CritChance(c, lvl);
+                        var err = Math.Abs(cr - critRate);
+                        if (err < bestErr)
+                        {
+                            bestErr = err;
+                            best = c;
+                        }
+                    }
+                    critOverride = best;
+                }
+            }
+            catch { /* fall back to using UI stat if inversion fails */ }
+        }
+        int? detOverride = double.IsNaN(det) ? null : Convert.ToInt32(det);
+        int? dhOverride = double.IsNaN(dh) ? null : Convert.ToInt32(dh);
+        int? tenOverride = double.IsNaN(ten) ? null : Convert.ToInt32(ten);
+        return (critOverride, detOverride, dhOverride, tenOverride);
+    }
+
+    private static void ResetLogGuardsIfNeeded(Job jobId, UiStateStatBlock statBlock)
+    {
+        var currentStatHash = HashCode.Combine((int)jobId, statBlock.Level, statBlock.WeaponDamage, statBlock.Mind, statBlock.Determination, statBlock.CriticalHit, statBlock.DirectHit, statBlock.Tenacity);
+        currentStatHash = HashCode.Combine(currentStatHash, statBlock.SpellSpeed);
+        if (_lastLoggedStatHash != currentStatHash)
+        {
+            _loggedStatsInfo = false;
+            _loggedResults = false;
+            _loggedBaseHeal = false;
+            _lastLoggedStatHash = currentStatHash;
+        }
+    }
+
+    private static void LogStatsInfo(StatBlockEquations eq, UiStateStatBlock statBlock, int lvl, Job jobId)
+    {
+        try
+        {
+            if (!_loggedStatsInfo)
+            {
+                PluginLog.Information($"[CalcExpectedOutput] Level={lvl} Job={jobId} MainStat={statBlock.Mind} WeaponDamage={statBlock.WeaponDamage}");
+                PluginLog.Information($"[CalcExpectedOutput] CriticalHitStat={statBlock.CriticalHit} CritChance={eq.CritChance():P2} CritDamage={eq.CritDamage():P0}");
+                PluginLog.Information($"[CalcExpectedOutput] DeterminationStat={statBlock.Determination} DeterminationMultiplier={eq.DeterminationMultiplier():P4}");
+                PluginLog.Information($"[CalcExpectedOutput] DirectHitStat={statBlock.DirectHit} DirectHitChance={eq.DirectHitChance():P2}");
+                PluginLog.Information($"[CalcExpectedOutput] TenacityStat={statBlock.Tenacity} TenacityOffensive={eq.TenacityOffensiveModifier():P4}");
+                PluginLog.Information($"[CalcExpectedOutput] WeaponDamageMultiplier={eq.WeaponDamageMultiplier():F4} MainStatMultiplier={eq.MainStatMultiplier():F4} Trait={eq.GetTraitModifier():F4}");
+                _loggedStatsInfo = true;
+            }
+        }
+        catch { /* ignored */ }
+    }
+
+    private static (double normalDamage, double avgDamage, double critDamage) CalculateDamage(StatBlockEquations eq, int potency, double critMult)
+    {
+        var normalDamage = Math.Floor(eq.BaseDamage(potency));
+        var avgDamage = Math.Floor(eq.AverageSkillDamage(potency));
+        var critMultiplier = (critMult > 0) ? critMult : eq.CritDamage();
+        var critDamage = Math.Floor(normalDamage * critMultiplier);
+        return (normalDamage, avgDamage, critDamage);
+    }
+
+    private static (double normalHeal, double avgHeal, double critHeal) CalculateHeal(StatBlockEquations eq, UiStateStatBlock statBlock, int potency, double critMult, double critRate)
+    {
+        var normalHeal = Math.Floor(BaseHeal(eq, statBlock, potency));
+        var avgHeal = Math.Floor(10 * BaseHeal(eq, statBlock, potency) * (1 + (critMult - 1) * critRate)) / 10;
+        var critMultiplier = (critMult > 0) ? critMult : eq.CritDamage();
+        var critHeal = Math.Floor(normalHeal * critMultiplier);
+        LogBaseHeal(eq, statBlock, potency, normalHeal);
+        return (normalHeal, avgHeal, critHeal);
+    }
+
+    private static (double normalHot, double avgHot, double critHot) CalculateHot(StatBlockEquations eq, UiStateStatBlock statBlock, int potency, double critMult, double critRate)
+    {
+        var normalHot = Math.Floor(ComputeHotForRoll(eq, statBlock, potency, 100));
+        var critMultiplierForHot = (critMult > 0) ? critMult : eq.CritDamage();
+        var critHot = Math.Floor(normalHot * critMultiplierForHot);
+        var cr = (critRate is > 0 and <= 1) ? critRate : eq.CritChance();
+        var avgHot = Math.Floor(10 * ((1 - cr) * normalHot + cr * critHot)) / 10.0;
+        try
+        {
+            if (!_loggedResults)
+            {
+                PluginLog.Information($"[HealingCalc.HoT] normalMid={normalHot} avgHot={avgHot} critMid={critHot}");
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return (normalHot, avgHot, critHot);
+    }
+
+    private static void LogResults(double normalHeal, double avgHeal, double critHeal, double critMultiplier, UiStateStatBlock statBlock, StatBlockEquations eq)
+    {
+        try
+        {
+            if (!_loggedResults)
+            {
+                PluginLog.Information($"[HealingCalc.Result] normalHeal={normalHeal} avgHeal={avgHeal} critHeal={critHeal} critMultiplier={critMultiplier:F4}");
+                if (normalHeal == 0)
+                {
+                    PluginLog.Warning($"[HealingCalc.ZeroHeal] normalHeal==0. Stats: Mind={statBlock.Mind} HealingMagicPotency={statBlock.HealingMagicPotency} Determination={statBlock.Determination} WeaponDamage={statBlock.WeaponDamage}");
+                    PluginLog.Warning($"[HealingCalc.ZeroHeal] Multipliers: MainStat={eq.MainStatMultiplier():F6} Determination={eq.DeterminationMultiplier():F6} WeaponDamageMult={eq.WeaponDamageMultiplier():F6} Trait={eq.GetTraitModifier():F6}");
+                }
+                _loggedResults = true;
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private static void LogBaseHeal(StatBlockEquations eq, UiStateStatBlock statBlock, int potency, double h)
+    {
+        try
+        {
+            if (!_loggedBaseHeal)
+            {
+                var hmpMulti = eq.MainStatMultiplier();
+                var detMulti = eq.DeterminationMultiplier();
+                var h1 = Math.Floor(potency * hmpMulti * detMulti);
+                h1 = Math.Floor(h1 / 100.0);
+                var h2 = Math.Floor(h1 * statBlock.WeaponDamage);
+                var h3 = Math.Floor(h2 * eq.GetTraitModifier());
+                const int rand = 100;
+
+                PluginLog.Information($"[HealingCalc.BaseHeal] int H1={h1} H2={h2} H3={h3} deterministicRoll={rand} final={h} (trait={eq.GetTraitModifier():F4})");
+                _loggedBaseHeal = true;
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    private static double BaseHeal(StatBlockEquations eq, UiStateStatBlock statBlock, int potency)
+    {
+        var hmpMulti = eq.MainStatMultiplier();
+        var detMulti = eq.DeterminationMultiplier();
+        var h1 = Math.Floor(potency * hmpMulti * detMulti);
+        h1 = Math.Floor(h1 / 100.0);
+        var h2 = Math.Floor(h1 * statBlock.WeaponDamage);
+        var h3 = Math.Floor(h2 * eq.GetTraitModifier());
+        const int rand = 100;
+        var h = Math.Floor(h3 * rand / 100.0);
+        return h;
+    }
+
+    private static double ComputeHotForRoll(StatBlockEquations eq, UiStateStatBlock statBlock, int potency, int roll)
+    {
+        var hmp = eq.MainStatMultiplier();
+        var detm = eq.DeterminationMultiplier();
+        var spd = StatEquations.HotMultiplier(statBlock.SpellSpeed, statBlock.Level);
+        var wd = statBlock.WeaponDamage;
+        var trait = eq.GetTraitModifier();
+        var h1 = Math.Floor(potency * hmp * detm);
+        h1 = Math.Floor(h1 / 100.0);
+        var h2 = Math.Floor(h1 * wd);
+        var h3 = Math.Floor(h2 * trait);
+        h3 = Math.Floor(h3 * spd / 100.0);
+        var outv = Math.Floor(h3 * roll / 100.0);
+        return outv;
     }
 
     // Explicit normal class implementation to avoid primary-constructor syntax issues

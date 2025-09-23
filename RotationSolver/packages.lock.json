@@ -20,15 +20,6 @@
         "resolved": "3.0.1.16",
         "contentHash": "5Zn4UtbKqJKZY6ETbjFFgURudDKblWGcRPOrNqmX3Nrla5+ldgH9KzhU+VVXpz38r8UnyshEKUjLihFE07VWqw=="
       },
-      "Lumina.Excel": {
-        "type": "Direct",
-        "requested": "[7.3.1, )",
-        "resolved": "7.3.1",
-        "contentHash": "NKjlWOi/hnBx6ZHV/VmDknIFQLuBmBoqdufDxawzoAsAwye2dibZdMYyz/gIezSRzAMbU0qP9h51uYo65eiWIQ==",
-        "dependencies": {
-          "Lumina": "6.3.0"
-        }
-      },
       "XIVCalc": {
         "type": "Direct",
         "requested": "[0.3.1, )",
@@ -39,14 +30,6 @@
         "type": "Transitive",
         "resolved": "4.2.3",
         "contentHash": "SyeAfu2wL5247sipJoPUzQfjiwQtfSd8hN4IbgoyVcDx4PP6Dud4znwPRibWQzLtTlUxYYcbf5f4p+EfFC7KtQ=="
-      },
-      "Lumina": {
-        "type": "Transitive",
-        "resolved": "6.3.0",
-        "contentHash": "FQlZ16KhXtPGCEq1KeRTDZ14uq6qrvW2vYnNNlCpW7Xs1iLhF8AJsbYG8S0y1NnP7BRholPY8KGToVTsvmb8jw==",
-        "dependencies": {
-          "Microsoft.Extensions.ObjectPool": "8.0.7"
-        }
       },
       "Microsoft.CodeAnalysis.Analyzers": {
         "type": "Transitive",
@@ -73,11 +56,6 @@
           "System.Collections.Immutable": "9.0.0",
           "System.Reflection.Metadata": "9.0.0"
         }
-      },
-      "Microsoft.Extensions.ObjectPool": {
-        "type": "Transitive",
-        "resolved": "8.0.7",
-        "contentHash": "2yLweyqmpuuFSRo+I3sLHMxmnAgNcI537kBJiyv49U2ZEqo00jZcG8lrnD8uCiOJp9IklYyTZULtbsXoFVzsjQ=="
       },
       "Microsoft.Win32.SystemEvents": {
         "type": "Transitive",

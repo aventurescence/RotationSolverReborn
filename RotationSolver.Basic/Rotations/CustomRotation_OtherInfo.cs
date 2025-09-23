@@ -324,7 +324,29 @@ public partial class CustomRotation
                     if (count > 9) break;
                 }
             }
-            return count == 8 || count == 9;
+            return count is 8 or 9;
+        }
+    }
+
+    /// <summary>
+    /// Whether the number of party members is 4.
+    /// </summary>
+    public static bool IsLightParty
+    {
+        get
+        {
+            var count = 0;
+            var members = PartyMembers;
+            if (members != null)
+            {
+                foreach (var _ in members)
+                {
+                    count++;
+                    if (count > 4) break;
+                }
+            }
+
+            return count is 4 or 5;
         }
     }
 
